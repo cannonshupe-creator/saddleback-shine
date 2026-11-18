@@ -1,0 +1,1464 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Saddleback Shine</title>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Shine">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" type="image/png" href="icon-192.png">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#ffffff">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;700&display=swap">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+/* One phone column. Clean white with one water-blue accent. The door colors on the map are a key, not branding. */
+:root{
+  --bg:#f6f9fb; --surface:#ffffff; --ink:#10212b; --muted:#5a6a75; --line:#dbe4ea;
+  --accent:#0877c9; --accent-ink:#ffffff; --accent-soft:#e4f2fc; --ok:#2e9e5b; --warn:#b4441c; --warn-soft:#fbe6dc;
+  --display:"Space Grotesk",ui-sans-serif,system-ui,sans-serif;
+  --body:"Inter",ui-sans-serif,system-ui,-apple-system,sans-serif;
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font:15px/1.45 var(--body);
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));
+  padding-block:calc(10px + env(safe-area-inset-top,0px)) calc(16px + env(safe-area-inset-bottom,0px))}
+main{max-width:560px;margin:0 auto;display:grid;gap:12px}
+h1{font:700 20px/1.1 var(--display);margin:0;letter-spacing:-.01em;display:flex;align-items:center;gap:8px}
+h1 .drop{width:14px;height:14px;background:var(--accent);border-radius:0 60% 60% 60%;transform:rotate(45deg);flex:none}
+h2{font:700 14px/1.2 var(--display);margin:0;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+.top{display:grid;gap:8px}
+.tabs{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:3px}
+.tabs button{border:0;background:none;color:var(--muted);font:600 14px var(--body);padding:10px 2px;border-radius:9px;white-space:nowrap}
+.tabs button[aria-selected="true"]{background:var(--accent);color:var(--accent-ink)}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px;display:grid;gap:10px;min-width:0}
+input,select,textarea{font:16px var(--body);color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:9px;padding:10px 11px;width:100%;min-width:0}
+textarea{resize:vertical}
+input:focus-visible,select:focus-visible,textarea:focus-visible,button:focus-visible,a:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+button{font:600 15px var(--body);cursor:pointer}
+.btn{border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:9px;padding:10px 14px;text-decoration:none;display:inline-block;font:600 15px var(--body);text-align:center}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn.small{padding:7px 11px;font-size:14px}
+.btn.good{background:var(--ok);border-color:var(--ok);color:#fff}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.row>input{flex:1}
+.muted{color:var(--muted);font-size:13px}
+.muted.warn{color:var(--warn);font-weight:600}
+.results{display:grid;gap:8px}
+.seg{display:grid;grid-template-columns:1fr 1fr;gap:4px;background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:3px}
+.seg.three{grid-template-columns:repeat(3,1fr)} .seg.four{grid-template-columns:repeat(4,1fr)}
+.seg button{border:0;background:none;color:var(--muted);padding:12px 4px;border-radius:7px;font:600 14px var(--body)}
+.seg button[aria-pressed="true"]{background:var(--surface);color:var(--accent);box-shadow:0 0 0 1px var(--accent)}
+.q{display:grid;gap:6px}
+.qlabel{font:600 14px var(--body)}
+.chips{display:flex;gap:6px;flex-wrap:wrap}
+.chip{border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:99px;padding:11px 16px;font:600 14px var(--body)}
+.chip[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.chip.mini{padding:6px 11px;font-size:13px}
+.stepper{display:grid;grid-template-columns:1fr auto;align-items:center;gap:10px}
+.ctl{display:flex;align-items:center;gap:6px}
+.ctl button{width:46px;height:46px;border-radius:9px;border:1px solid var(--line);background:var(--surface);color:var(--ink);font:600 20px/1 var(--body)}
+.ctl input{width:74px;text-align:center;font-weight:600}
+.checks{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.checks label{display:flex;gap:9px;align-items:center;border:1px solid var(--line);border-radius:10px;padding:12px 10px;font:600 14px var(--body);min-width:0}
+.checks label:has(input:checked){border-color:var(--accent);background:var(--accent-soft)}
+.checks input,.check input{width:22px;height:22px;flex:none;accent-color:var(--accent);padding:0}
+.check{display:flex;gap:8px;align-items:flex-start;font-size:14px}
+.opt{border:1px solid var(--line);border-radius:12px;padding:10px;display:grid;gap:8px}
+.opt-head{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.opt-head b{margin-right:auto}
+.optgrid{display:grid;grid-template-columns:1fr 112px;gap:8px}
+.quote{background:var(--accent-soft);border-radius:12px;padding:12px 14px;white-space:pre-line;font-size:14px;overflow-wrap:anywhere}
+.fine{font-size:12px;color:var(--muted)}
+.flag{background:var(--warn-soft);color:var(--warn);border-radius:9px;padding:9px 11px;font-size:14px;font-weight:700}
+.flag.ok{background:var(--accent-soft);color:var(--accent)}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+label.f{display:grid;gap:4px;font-size:13px;color:var(--muted)}
+.lead{border:1px solid var(--line);border-radius:12px;padding:12px;display:grid;gap:6px;background:var(--surface);min-width:0}
+.lead .who{display:flex;justify-content:space-between;gap:8px;font-weight:600;align-items:flex-start}
+.lead .who span:first-child{overflow-wrap:anywhere}
+.lead .big{font:700 18px/1.2 var(--display);overflow-wrap:anywhere}
+.lead.done{background:var(--bg)}
+.pill{font:600 12px var(--body);padding:2px 8px;border-radius:99px;background:var(--bg);border:1px solid var(--line);white-space:nowrap}
+.pill.due{background:var(--warn-soft);color:var(--warn);border-color:var(--warn)}
+.pill.won{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.pill.paid{background:var(--ok);color:#fff;border-color:var(--ok)}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(20px + env(safe-area-inset-bottom,0px));z-index:1300;max-width:calc(100vw - 32px);background:var(--ink);color:#fff;padding:9px 14px;border-radius:10px;font-weight:600;font-size:14px;text-align:center}
+.num{display:inline-grid;place-items:center;width:22px;height:22px;border-radius:99px;background:var(--accent);color:var(--accent-ink);font:700 13px var(--body);margin-right:6px;vertical-align:1px}
+details.mini>summary{cursor:pointer;color:var(--muted);font-size:13px;padding:4px 0}
+details.mini[open]>summary{margin-bottom:6px}
+.filebtn{display:inline-block;text-align:center}
+table{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:14px}
+td,th{padding:5px 4px;border-bottom:1px solid var(--line);text-align:right}
+td:first-child,th:first-child{text-align:left}
+/* Doors, map first */
+#view-doors{position:relative}
+.dbar{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-bottom:8px}
+.dchip{border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:99px;padding:9px 13px;font:600 14px var(--body)}
+.dchip.due{background:var(--warn-soft);color:var(--warn);border-color:var(--warn)}
+.sdot{width:30px;height:30px;border-radius:99px;border:3px solid var(--surface);box-shadow:0 0 0 1px var(--line);background:#8a978f;margin-left:auto;padding:0}
+.sdot.ok{background:#2e9e5b} .sdot.wait{background:#e8a317} .sdot.bad{background:#c0392b}
+.dmapwrap{position:relative}
+#dmap{height:60vh;border-radius:12px;border:1px solid var(--line);background:var(--bg);-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}
+.dme,.dkey{position:absolute;z-index:500;border:1px solid var(--line);background:var(--surface);color:var(--ink);font:700 15px var(--body);box-shadow:0 2px 8px rgba(0,0,0,.18)}
+.dme{right:12px;bottom:18px;width:58px;height:58px;border-radius:99px}
+.dme.off{background:var(--ink);color:#fff}
+.dkey{left:12px;bottom:18px;border-radius:99px;padding:10px 14px;font-size:14px}
+.dlegend{position:absolute;z-index:500;left:12px;bottom:70px;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:10px 12px;display:grid;gap:6px;font-size:14px}
+.dlegend i{display:inline-block;width:12px;height:12px;border-radius:99px;margin-right:6px;vertical-align:-1px;border:2px solid #fff;box-shadow:0 0 0 1px var(--line)}
+.dhint{position:absolute;z-index:500;left:50%;top:10px;transform:translateX(-50%);background:var(--surface);border:1px solid var(--line);border-radius:99px;padding:6px 12px;font-size:13px;color:var(--muted);pointer-events:none;white-space:nowrap}
+.hold-ring{position:absolute;z-index:600;width:64px;height:64px;margin:-32px 0 0 -32px;border-radius:99px;border:4px solid var(--accent);pointer-events:none;animation:holdgrow .45s linear forwards}
+@keyframes holdgrow{from{transform:scale(.3);opacity:.4}to{transform:scale(1);opacity:1}}
+.sheet{position:fixed;left:0;right:0;bottom:0;z-index:1100;max-height:86vh;overflow-y:auto;background:var(--surface);border-top:1px solid var(--line);border-radius:18px 18px 0 0;box-shadow:0 -8px 30px rgba(0,0,0,.25);
+  padding:14px max(16px,env(safe-area-inset-right,0px)) calc(16px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px));display:grid;gap:10px}
+.sheet>*{max-width:560px;width:100%;margin:0 auto}
+.sheet-head{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
+.sheet .x{border:1px solid var(--line);background:var(--bg);color:var(--ink);border-radius:99px;width:44px;height:44px;font:700 22px/1 var(--body);flex:none}
+.door-addr{display:grid;gap:2px;min-width:0}
+.door-addr b{font:700 30px/1.1 var(--display);overflow-wrap:anywhere}
+.outs2{display:grid;gap:7px}
+.outs2 button{display:flex;align-items:center;gap:12px;min-height:54px;border-radius:14px;border:2px solid var(--line);background:var(--surface);color:var(--ink);font:700 18px var(--body);padding:0 16px;text-align:left}
+.outs2 button i{width:22px;height:22px;border-radius:99px;background:var(--c);flex:none;border:2px solid #fff;box-shadow:0 0 0 1px var(--line)}
+.outs2 button:active{border-color:var(--c)}
+.outs2 #quote-btn{border-color:var(--accent);color:var(--accent)}
+.outs2 #sale-btn{border-color:#2e9e5b;background:#2e9e5b;color:#fff}
+.later-box{border:2px solid var(--accent);border-radius:12px;padding:12px;display:grid;gap:10px;background:var(--accent-soft)}
+.later-box .chip{padding:14px 18px;font-size:16px}
+.cb{text-align:left;border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:10px;padding:10px 12px;font:500 15px var(--body);display:grid;gap:2px}
+.cb b{font-weight:700}
+.cb.due{border-color:var(--warn);background:var(--warn-soft)}
+.nosync{background:#c0392b;color:#fff;border-radius:14px;padding:12px 14px;margin-bottom:8px}
+.nosync>button{all:unset;display:block;width:100%;font:800 17px var(--body);cursor:pointer}
+.nosync small{display:block;font:500 13px var(--body);opacity:.95;margin-top:3px}
+.nosync .row{display:flex;gap:6px;margin-top:10px}
+.nosync input{flex:1;min-width:0;font-size:16px;padding:10px;border-radius:10px;border:0}
+.nosync .btn{background:#fff;color:#c0392b;font-weight:800}
+.updpill{position:fixed;left:50%;transform:translateX(-50%);top:calc(10px + env(safe-area-inset-top,0px));z-index:1200;border:0;background:var(--accent);color:var(--accent-ink);border-radius:99px;padding:10px 16px;font:700 14px var(--body);box-shadow:0 4px 14px rgba(0,0,0,.25);white-space:nowrap}
+/* Schedule: month grid + the day's jobs */
+.calhead{display:flex;align-items:center;gap:6px}
+.calhead b{flex:1;font:700 18px var(--display)}
+.calhead .btn{min-width:44px;min-height:40px}
+.cal{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px}
+.cal .dow{text-align:center;font:600 12px var(--body);color:var(--muted)}
+.day{aspect-ratio:1/1;min-height:42px;border:1px solid var(--line);background:var(--surface);border-radius:10px;display:grid;place-items:center;align-content:center;gap:3px;padding:0;color:var(--ink);font:600 15px var(--body);font-variant-numeric:tabular-nums}
+.day.past{color:var(--muted);background:var(--bg)}
+.day.today{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent)}
+.day[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.day .dots{display:flex;gap:3px;height:6px;align-items:center;font:700 10px/1 var(--body)}
+.day .dots i{width:6px;height:6px;border-radius:99px;background:var(--accent)}
+.day .dots i.done{background:var(--ok)}
+.day[aria-pressed="true"] .dots i{background:#fff}
+.job .win{font:700 13px var(--body);color:var(--accent);text-transform:uppercase;letter-spacing:.04em}
+@media (prefers-reduced-motion:no-preference){.btn,.seg button,.chip,.day{transition:background .15s}}
+</style>
+</head>
+<body>
+<main>
+  <div class="top">
+    <h1><span class="drop" aria-hidden="true"></span>Saddleback Shine</h1>
+    <div class="tabs" role="tablist">
+      <button id="tab-doors" role="tab" aria-selected="true">Doors</button>
+      <button id="tab-quote" role="tab" aria-selected="false">Quote</button>
+      <button id="tab-leads" role="tab" aria-selected="false">Leads <span id="due-count"></span></button>
+      <button id="tab-sched" role="tab" aria-selected="false">Schedule <span id="unsched-count"></span></button>
+    </div>
+  </div>
+
+  <div id="view-doors">
+    <!-- a full map that follows you; tap or hold a house; one sheet with the answers -->
+    <div class="dbar">
+      <button id="d-knocker" class="dchip" type="button">Set your name</button>
+      <button id="d-today-chip" class="dchip" type="button">Today 0</button>
+      <button id="d-cb-chip" class="dchip" type="button">Come back 0</button>
+      <button id="d-sync-dot" class="sdot" type="button" aria-label="Sync status"></button>
+    </div>
+    <div id="d-nosync" class="nosync" hidden>
+      <button id="nj-open" type="button">NOT SYNCING – tap to join<small id="nj-sub">The other phone can't see your marks yet.</small></button>
+      <div id="nj-box" hidden>
+        <small>Paste the team invite link (from the text, or from the other phone: Doors &gt; tap your name &gt; Invite a teammate).</small>
+        <div class="row"><input id="nj-in" type="text" placeholder="Paste the invite link" autocomplete="off"><button class="btn small" id="nj-go" type="button">Join</button></div>
+      </div>
+    </div>
+    <div class="dmapwrap">
+      <div id="dmap"></div>
+      <div id="hold-ring" class="hold-ring" hidden></div>
+      <div id="d-hint" class="dhint">Tap or hold a house</div>
+      <button id="d-me" class="dme" type="button" aria-label="Center on me">Me</button>
+      <button id="d-key" class="dkey" type="button">Key</button>
+      <div id="d-legend" class="dlegend" hidden><span><i style="background:#8a978f"></i>No answer</span><span><i style="background:#c0392b"></i>Not interested</span><span><i style="background:#7a5cc9"></i>Already has someone</span><span><i style="background:#e8a317"></i>Come back later</span><span><i style="background:#0877c9"></i>Quote</span><span><i style="background:#2e9e5b"></i>Sale</span><span><i style="background:#10212b"></i>You</span></div>
+    </div>
+    <div id="dsheet" class="sheet" hidden>
+      <div class="sheet-head"><div class="door-addr"><b id="d-addr"></b><span class="muted" id="d-sub"></span></div><button id="d-close" class="x" type="button" aria-label="Close">×</button></div>
+      <div id="d-pick">
+        <div class="outs2">
+          <button type="button" data-door="none" style="--c:#8a978f"><i></i>No answer</button>
+          <button type="button" data-door="no" style="--c:#c0392b"><i></i>Not interested</button>
+          <button type="button" data-door="has" style="--c:#7a5cc9"><i></i>Already has someone</button>
+          <button type="button" data-door="later" style="--c:#e8a317"><i></i>Come back later</button>
+          <button type="button" data-door="quote" id="quote-btn" style="--c:#0877c9"><i></i>Quote</button>
+          <button type="button" data-door="sale" id="sale-btn" style="--c:#2e9e5b"><i></i>Sale</button>
+        </div>
+        <div class="row" style="margin-top:10px"><button class="btn small" id="d-type" type="button">Wrong house? Type it</button></div>
+        <div class="row" id="d-fix-row" hidden style="margin-top:8px"><input id="d-fix" type="text" placeholder="House number and street" autocomplete="off"><button class="btn small" id="d-fix-go" type="button">Use</button></div>
+        <button class="btn small" id="d-remove" type="button" hidden style="margin-top:12px;width:100%;color:#c0392b;border-color:#e6b3ad">Remove mark</button>
+      </div>
+      <div class="later-box" id="later-box" hidden>
+        <b id="later-addr">Come back later</b>
+        <div class="q"><span class="qlabel">When?</span>
+          <div class="chips" id="later-when"><button type="button" class="chip" data-when="tonight" aria-pressed="false">Tonight</button><button type="button" class="chip" data-when="tomorrow" aria-pressed="false">Tomorrow</button><button type="button" class="chip" data-when="weekend" aria-pressed="false">Weekend</button></div></div>
+        <div class="q" id="later-day-row" hidden><span class="qlabel">Which day?</span>
+          <div class="chips"><button type="button" class="chip" data-day="6" aria-pressed="false">Sat</button><button type="button" class="chip" data-day="0" aria-pressed="false">Sun</button></div></div>
+        <div class="q" id="later-time-row" hidden><span class="qlabel">What time?</span>
+          <div class="chips"><button type="button" class="chip" data-time="16:00" aria-pressed="false">4 PM</button><button type="button" class="chip" data-time="17:00" aria-pressed="false">5 PM</button><button type="button" class="chip" data-time="18:00" aria-pressed="false">6 PM</button><button type="button" class="chip" data-time="19:00" aria-pressed="false">7 PM</button></div>
+          <label class="f">Other time<input id="later-time" type="time"></label></div>
+        <label class="f">Their name (optional)<input id="later-name" type="text" autocomplete="off" placeholder="Name"></label>
+        <div class="row"><button class="btn primary" id="later-save" type="button">Save</button><button class="btn" id="later-skip" type="button">Skip</button></div>
+      </div>
+    </div>
+    <div id="cbsheet" class="sheet" hidden>
+      <div class="sheet-head"><h2>Come back later</h2><button class="x" type="button" data-close="cbsheet" aria-label="Close">×</button></div>
+      <div id="cb-list" class="results"></div>
+    </div>
+    <div id="tsheet" class="sheet" hidden>
+      <div class="sheet-head"><h2>Today</h2><button class="x" type="button" data-close="tsheet" aria-label="Close">×</button></div>
+      <label class="f" id="who-row">Knocker's name (it goes on every door and quote you log)<input id="who" type="text" autocomplete="off" placeholder="First name"></label>
+      <div style="overflow-x:auto"><table><thead><tr><th>Knocker</th><th>Doors</th><th>No ans.</th><th>No</th><th>Has</th><th>Later</th><th>Quote</th><th>Sales</th></tr></thead><tbody id="d-today"></tbody></table></div>
+      <h2 style="margin-top:14px">Team sync</h2>
+      <p class="muted" id="sync-status"></p>
+      <div class="row"><button class="btn small primary" id="sync-now" type="button">Sync now</button><button class="btn small" id="invite" type="button" hidden>Invite a teammate</button></div>
+      <details class="mini"><summary>Join with an invite link</summary>
+        <div class="row"><input id="join-in" type="text" placeholder="Paste the invite link" autocomplete="off"><button class="btn small" id="join-go" type="button">Join</button></div></details>
+      <p class="fine">Doors, quotes and jobs save on this phone first, then go to the team's private sheet when there's signal. No answer never replaces another answer.</p>
+    </div>
+  </div>
+
+  <div id="view-quote" style="display:none;gap:12px">
+    <section class="card">
+      <h2><span class="num">1</span>House</h2>
+      <div class="row"><input id="addr" type="text" placeholder="House number and street, city" autocomplete="off" enterkeyhint="done"><button class="btn" id="here" type="button">Here</button></div>
+      <p class="muted" id="addr-note">Tap a house on the Doors map and press Quote, or type the address.</p>
+      <div class="flag ok" id="sale-note" hidden>Sale at the door: this saves as Won, ready to schedule.</div>
+      <div class="flag ok" id="edit-note" hidden>Changing a saved quote. Save puts it back on the same customer.</div>
+      <div class="q"><span class="qlabel">Stories <span class="muted">(for your reference)</span></span>
+        <div class="seg three" role="group" aria-label="Stories">
+          <button data-story="1" aria-pressed="true" type="button">1 story</button>
+          <button data-story="2" aria-pressed="false" type="button">2 story</button>
+          <button data-story="3" aria-pressed="false" type="button">3 or more</button>
+        </div></div>
+      <div class="flag" id="story-flag" hidden>We only do 2 stories max.</div>
+    </section>
+
+    <section class="card">
+      <h2><span class="num">2</span>What they want</h2>
+      <div class="checks">
+        <label><input type="checkbox" data-svc="ext"> Exterior windows</label>
+        <label><input type="checkbox" data-svc="int"> Interior windows</label>
+        <label><input type="checkbox" data-svc="screens"> Screens</label>
+        <label><input type="checkbox" data-svc="tracks"> Tracks</label>
+        <label><input type="checkbox" data-svc="gutters"> Gutters</label>
+        <label><input type="checkbox" data-svc="solar"> Solar panels</label>
+      </div>
+      <div class="stepper" id="panel-row" hidden><span class="qlabel">How many panels?</span>
+        <div class="ctl"><button type="button" id="panel-minus" aria-label="One less panel">−</button><input id="panels" type="number" inputmode="numeric" min="0" step="1" value="0" aria-label="Panel count"><button type="button" id="panel-plus" aria-label="One more panel">+</button></div></div>
+      <div class="q"><span class="qlabel">Anything special</span>
+        <div class="chips" role="group" aria-label="Tags">
+          <button type="button" class="chip" data-tag="french" aria-pressed="false">French panes</button>
+          <button type="button" class="chip" data-tag="hard" aria-pressed="false">Hard to reach</button>
+          <button type="button" class="chip" data-tag="sky" aria-pressed="false">Skylights</button>
+        </div></div>
+      <label class="f">Notes (only the team sees these)<textarea id="q-notes" rows="2" autocomplete="off"></textarea></label>
+    </section>
+
+    <section class="card">
+      <h2><span class="num">3</span>Price</h2>
+      <p class="muted">You type the price. Add up to 3 options on one quote.</p>
+      <div id="opts" class="results"></div>
+      <button class="btn small" id="opt-add" type="button">Add another option</button>
+      <div class="q"><span class="qlabel">Repeat</span>
+        <div class="seg four" role="group" aria-label="Repeat">
+          <button data-repeat="0" aria-pressed="true" type="button">One time</button>
+          <button data-repeat="1" aria-pressed="false" type="button">1 month</button>
+          <button data-repeat="3" aria-pressed="false" type="button">3 months</button>
+          <button data-repeat="6" aria-pressed="false" type="button">6 months</button>
+        </div></div>
+      <label class="f" id="repeat-price-row" hidden>Price per repeat visit ($)<input id="repeat-price" type="number" inputmode="decimal" min="0" step="1" autocomplete="off"></label>
+    </section>
+
+    <section class="card">
+      <h2><span class="num">4</span>Customer</h2>
+      <div class="grid2">
+        <label class="f">Name<input id="c-name" type="text" autocomplete="off"></label>
+        <label class="f">Phone<input id="c-phone" type="tel" inputmode="tel" autocomplete="off"></label>
+      </div>
+      <label class="f">Email (optional)<input id="c-email" type="email" inputmode="email" autocomplete="off"></label>
+      <label class="check"><input id="c-consent" type="checkbox"> OK to text: they said it's fine to text them about this quote</label>
+      <div class="quote" id="quote-card" aria-live="polite"></div>
+      <div class="row">
+        <button class="btn primary" id="send-quote" type="button">Text this quote</button>
+        <button class="btn" id="save-only" type="button">Save</button>
+        <button class="btn" id="pdf-btn" type="button">Quote PDF</button>
+      </div>
+      <p class="muted" id="send-note">Text opens your Messages app with the quote written out. You press send. Both buttons save it to Leads.</p>
+      <div class="row"><button class="btn small" id="clear-quote" type="button">Start over</button></div>
+      <label class="f">Your first name (goes on texts and quotes)<input id="s-seller" type="text" autocomplete="off"></label>
+    </section>
+  </div>
+
+  <div id="view-leads" style="display:none;gap:12px">
+    <section class="card">
+      <h2>Follow-ups due</h2>
+      <div id="leads-due" class="results"></div>
+    </section>
+    <section class="card">
+      <h2>All quotes</h2>
+      <div id="leads-all" class="results"></div>
+      <div class="row">
+        <button class="btn small primary" id="backup" type="button">Back up (send a file)</button>
+        <label class="btn small filebtn" for="restore-in">Restore a backup</label>
+        <input id="restore-in" type="file" accept="application/json,.json" hidden>
+      </div>
+      <p class="muted" id="backup-note"></p>
+      <p class="muted" id="sync-status-l"></p>
+    </section>
+    <details class="card" id="price-log">
+      <summary style="cursor:pointer;font:700 15px var(--display)">Price log: every price you've quoted</summary>
+      <div id="price-list" class="results"></div>
+    </details>
+  </div>
+
+  <div id="view-sched" style="display:none;gap:12px">
+    <section class="card">
+      <div class="calhead"><button class="btn small" id="cal-prev" type="button" aria-label="Previous month">‹</button><b id="cal-title"></b><button class="btn small" id="cal-today" type="button">Today</button><button class="btn small" id="cal-next" type="button" aria-label="Next month">›</button></div>
+      <div class="cal" aria-hidden="true"><span class="dow">S</span><span class="dow">M</span><span class="dow">T</span><span class="dow">W</span><span class="dow">T</span><span class="dow">F</span><span class="dow">S</span></div>
+      <div class="cal" id="cal-grid"></div>
+    </section>
+    <section class="card">
+      <h2 id="day-title"></h2>
+      <div id="day-list" class="results"></div>
+      <button class="btn small" id="day-rain" type="button" hidden>Rain day: move all to the next day</button>
+    </section>
+    <section class="card">
+      <h2>Unscheduled <span id="unsched-n"></span></h2>
+      <div id="unsched-list" class="results"></div>
+      <p class="muted" id="sync-status-d"></p>
+    </section>
+  </div>
+
+  <div id="ssheet" class="sheet" hidden>
+    <div class="sheet-head"><div class="door-addr"><b id="s-addr"></b><span class="muted" id="s-sub"></span></div><button id="s-close" class="x" type="button" aria-label="Close">×</button></div>
+    <div class="q"><span class="qlabel">Day</span>
+      <div class="chips" id="s-quick"></div>
+      <label class="f">Another day<input id="s-date" type="date"></label></div>
+    <div class="q"><span class="qlabel">Time window</span><div class="chips" id="s-wins"></div></div>
+    <div class="q" id="s-opt-row" hidden><span class="qlabel">Which option did they pick?</span><div class="chips" id="s-opts"></div></div>
+    <label class="f">Assigned to (optional)<input id="s-who" type="text" autocomplete="off" placeholder="Name"></label>
+    <div class="row"><button class="btn primary" id="s-save" type="button">Save to the schedule</button><button class="btn" id="s-unsched" type="button" hidden>Take off the schedule</button></div>
+  </div>
+</main>
+<button id="upd" class="updpill" type="button" hidden>New version ready · tap to refresh</button>
+<script>
+"use strict";
+// ---------- storage: everything saves on this phone first ----------
+// Every key starts with "ss-", so this app can never read or write another app's data on the same phone.
+const store = {
+  get(k, d){ try{ const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; }catch(e){ return d; } },
+  set(k, v){ try{ localStorage.setItem(k, JSON.stringify(v)); }catch(e){} }
+};
+const K = {settings:"ss-settings", leads:"ss-leads", prices:"ss-pricelog", team:"ss-team", outbox:"ss-outbox", shadow:"ss-lead-shadow",
+  doors:"ss-doors", seq:"ss-seq", lastsync:"ss-lastsync", lastbackup:"ss-lastbackup"};
+const S = Object.assign({seller:""}, store.get(K.settings, {}));
+
+const $ = id => document.getElementById(id);
+const money = n => { n = Number(n) || 0; return "$" + (Math.abs(n % 1) > 0.004 ? n.toLocaleString("en-US", {minimumFractionDigits:2, maximumFractionDigits:2}) : Math.round(n).toLocaleString("en-US")); };
+const rid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+function toast(msg){ const t = document.createElement("div"); t.className = "toast"; t.textContent = msg; document.body.appendChild(t); setTimeout(() => t.remove(), 2400); }
+// Everything a person typed goes on the page as text, never as HTML.
+function el(tag, cls, text){ const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; }
+function btn(text, cls, fn){ const b = el("button", "btn small" + (cls ? " " + cls : ""), text); b.type = "button"; b.onclick = fn; return b; }
+function link(text, cls, href){ const a = el("a", "btn small" + (cls ? " " + cls : ""), text); a.href = href; return a; }
+
+// ---------- house addresses (county address points from Overture Maps' public tile file) ----------
+function ftBetween(a, b){
+  const R = 6371008.8, la = (a[0]+b[0])/2*Math.PI/180;
+  const dx = (b[1]-a[1])*Math.PI/180*Math.cos(la)*R, dy = (b[0]-a[0])*Math.PI/180*R;
+  return Math.hypot(dx, dy) * 3.28084;
+}
+const SUFFIX = {STREET:"ST", AVENUE:"AVE", AV:"AVE", DRIVE:"DR", ROAD:"RD", LANE:"LN", COURT:"CT", CIRCLE:"CIR", PLACE:"PL",
+  BOULEVARD:"BLVD", TERRACE:"TER", PARKWAY:"PKWY", HIGHWAY:"HWY", NORTH:"N", SOUTH:"S", EAST:"E", WEST:"W", TRAIL:"TRL", WAY:"WAY"};
+const normStreet = s => (s||"").toUpperCase().replace(/[^A-Z0-9 ]/g," ").split(/\s+/).filter(Boolean).map(w => SUFFIX[w] || w);
+const addrKey = a => normStreet(a).join(" ");
+const OVERTURE_ADDR = "https://overturemaps-extras-us-west-2.s3.us-west-2.amazonaws.com/tiles/2026-10-21.0/addresses.pmtiles";
+let ovLib = null, ovLoading = null, addrArchive = null;
+function loadLib(){
+  if (!ovLoading) ovLoading = Promise.all([
+    import("https://cdn.jsdelivr.net/npm/pmtiles@4.3.0/+esm"),
+    import("https://cdn.jsdelivr.net/npm/@mapbox/vector-tile@2.0.3/+esm"),
+    import("https://cdn.jsdelivr.net/npm/pbf@4.0.1/+esm")]).then(([pm, vt, pbf]) => {
+      ovLib = {VectorTile: vt.VectorTile, Pbf: pbf.default}; addrArchive = new pm.PMTiles(OVERTURE_ADDR);
+    }).catch(e => { ovLoading = null; throw e; });
+  return ovLoading;
+}
+// one zoom-14 tile at a time, decoded once and kept (fast after the first tap)
+const addrTiles = new Map();
+async function addrPoints(lat, lon){
+  await loadLib();
+  const z = 14, n = 2**z, x = Math.floor((lon+180)/360*n), y = Math.floor((1-Math.asinh(Math.tan(lat*Math.PI/180))/Math.PI)/2*n), k = x + "/" + y;
+  if (addrTiles.has(k)) return addrTiles.get(k);
+  const t = await addrArchive.getZxy(z, x, y), pts = [];
+  if (t && t.data){
+    const vt = new ovLib.VectorTile(new ovLib.Pbf(new Uint8Array(t.data)));
+    for (const name in vt.layers){ const lyr = vt.layers[name];
+      for (let i = 0; i < lyr.length; i++){ const f = lyr.feature(i), p = f.properties; if (!p.number || !p.street) continue;
+        const c = f.toGeoJSON(x, y, z).geometry.coordinates;
+        pts.push({lat:c[1], lon:c[0], number:String(p.number), street:String(p.street).toLowerCase().replace(/\b\w/g, m => m.toUpperCase())});
+      } }
+  }
+  addrTiles.set(k, pts); return pts;
+}
+async function snapAddress(lat, lon){
+  const pts = await addrPoints(lat, lon); let best = null;
+  for (const p of pts){ const d = ftBetween([lat, lon], [p.lat, p.lon]); if (d < 200 && (!best || d < best.d)) best = {...p, d}; }
+  if (!best) return null;
+  const address = best.number + " " + best.street;
+  return {address, addrKey: addrKey(address), lat: best.lat, lon: best.lon, number: best.number, street: best.street};
+}
+
+// ---------- the quote form ----------
+// The owner types every price. Nothing here works a price out.
+const SVC = [["ext","Exterior windows"], ["int","Interior windows"], ["screens","Screens"], ["tracks","Tracks"], ["gutters","Gutters"], ["solar","Solar panels"]];
+const TAGS = [["french","French panes"], ["hard","Hard to reach"], ["sky","Skylights"]];
+const REPEAT_WORDS = {1:"every month", 3:"every 3 months", 6:"every 6 months"};
+const MAX_OPTIONS = 3;
+const blankQuote = () => ({address:"", lat:null, lon:null, story:1, svc:{}, panels:0, tags:{}, options:[{label:"", price:""}], def:0, repeat:0, repeatPrice:"", fromSale:false, editId:null});
+let st = blankQuote();
+
+function svcText(q){
+  const have = (q && q.svc) || [];
+  return SVC.filter(([k]) => have.includes(k)).map(([k, label]) => k === "solar" && q.panels ? `solar panels (${q.panels} panel${q.panels === 1 ? "" : "s"})` : label.toLowerCase()).join(", ");
+}
+function detailText(q){
+  const t = TAGS.filter(([k]) => ((q && q.tags) || []).includes(k)).map(x => x[1].toLowerCase());
+  t.push(q && q.stories === 2 ? "2 story" : "1 story");
+  return t.join(", ");
+}
+// the price of a quote = the option the customer picked, or the default option until they pick
+function leadPrice(l){ const q = l.quote || {}, os = q.options || [], o = os[l.chosen != null ? l.chosen : (q.def || 0)] || os[0]; return o ? o.price : 0; }
+const cents = v => Math.round(v * 100) / 100;
+function formQuote(){
+  const priced = []; let def = 0;
+  st.options.forEach((o, i) => { const p = parseFloat(o.price); if (p > 0){ if (i === st.def) def = priced.length; priced.push({label: o.label.trim(), price: cents(p)}); } });
+  const rp = parseFloat(st.repeatPrice);
+  return {svc: SVC.map(x => x[0]).filter(k => st.svc[k]), panels: st.svc.solar ? (st.panels || 0) : 0, tags: TAGS.map(x => x[0]).filter(k => st.tags[k]),
+    stories: st.story, notes: $("q-notes").value.trim(), options: priced, def, repeat: st.repeat, repeatPrice: st.repeat && rp > 0 ? cents(rp) : 0,
+    total: priced[def] ? priced[def].price : 0};
+}
+function formLead(){
+  return {id:"", created: Date.now(), seller: S.seller || "", name: $("c-name").value.trim(), phone: $("c-phone").value.trim(), email: $("c-email").value.trim(),
+    address: st.address.trim(), lat: st.lat, lon: st.lon, consent: $("c-consent").checked, status:"quoted", touches:0, quote: formQuote(), chosen:null, job:null, paid:false};
+}
+function problem(l, sent){
+  const q = l.quote;
+  if (st.story === 3) return "We only do 2 stories max";
+  if (!l.address) return "Add the address first";
+  if (!q.svc.length) return "Check what they want first";
+  if (!q.options.length) return "Type the price first";
+  if (st.options.some(o => o.label.trim() && !(parseFloat(o.price) > 0))) return "Every option needs a price";
+  if (q.repeat && !q.repeatPrice) return "Type the price per repeat visit";
+  if (sent && !l.phone) return "Add their phone number";
+  if (sent && !l.consent) return "Ask if it's OK to text them first";
+  return "";
+}
+const quoteDirty = () => !!(st.address || st.editId || Object.values(st.svc).some(Boolean) || st.options.some(o => o.label || o.price) || $("c-name").value || $("c-phone").value || $("q-notes").value);
+
+function renderOpts(){
+  const box = $("opts"); box.textContent = "";
+  const many = st.options.length > 1;
+  st.options.forEach((o, i) => {
+    const row = el("div", "opt"), head = el("div", "opt-head");
+    head.append(el("b", "", many ? "Option " + (i + 1) : "Price"));
+    if (many){
+      const d = el("button", "chip mini", st.def === i ? "Default ✓" : "Make default"); d.type = "button"; d.setAttribute("aria-pressed", st.def === i);
+      d.onclick = () => { st.def = i; renderOpts(); preview(); };
+      const x = el("button", "chip mini", "Remove"); x.type = "button";
+      x.onclick = () => { st.options.splice(i, 1); st.def = st.def === i ? 0 : st.def > i ? st.def - 1 : st.def; renderOpts(); preview(); };
+      head.append(d, x);
+    }
+    const grid = el("div", "optgrid");
+    const lab = el("input"); lab.type = "text"; lab.autocomplete = "off"; lab.placeholder = many ? "What this option covers" : "What it covers (optional)"; lab.value = o.label;
+    lab.setAttribute("aria-label", "Option " + (i + 1) + " label"); lab.dataset.optLabel = i;
+    lab.oninput = () => { o.label = lab.value; preview(); };
+    const pr = el("input"); pr.type = "number"; pr.inputMode = "decimal"; pr.min = "0"; pr.step = "1"; pr.autocomplete = "off"; pr.placeholder = "$ price"; pr.value = o.price;
+    pr.setAttribute("aria-label", "Option " + (i + 1) + " price"); pr.dataset.optPrice = i;
+    pr.oninput = () => { o.price = pr.value; preview(); };
+    grid.append(lab, pr); row.append(head, grid); box.append(row);
+  });
+  $("opt-add").hidden = st.options.length >= MAX_OPTIONS;
+}
+$("opt-add").onclick = () => { if (st.options.length < MAX_OPTIONS){ st.options.push({label:"", price:""}); renderOpts(); preview(); } };
+function preview(){
+  $("panel-row").hidden = !st.svc.solar;
+  $("story-flag").hidden = st.story !== 3;
+  $("repeat-price-row").hidden = !st.repeat;
+  $("sale-note").hidden = !st.fromSale; $("edit-note").hidden = !st.editId;
+  const f = formLead();
+  $("quote-card").textContent = st.story === 3 ? "We only do 2 stories max."
+    : (f.quote.svc.length || f.quote.options.length) ? quoteText(f) : "The quote shows here as you fill it in.";
+}
+function paintQuote(){
+  $("addr").value = st.address;
+  document.querySelectorAll("[data-story]").forEach(b => b.setAttribute("aria-pressed", +b.dataset.story === st.story));
+  document.querySelectorAll("[data-svc]").forEach(c => { c.checked = !!st.svc[c.dataset.svc]; });
+  $("panels").value = st.panels;
+  document.querySelectorAll("[data-tag]").forEach(b => b.setAttribute("aria-pressed", !!st.tags[b.dataset.tag]));
+  document.querySelectorAll("[data-repeat]").forEach(b => b.setAttribute("aria-pressed", +b.dataset.repeat === st.repeat));
+  $("repeat-price").value = st.repeatPrice;
+  $("addr-note").textContent = st.lat != null ? "House picked on the map." : "Tap a house on the Doors map and press Quote, or type the address.";
+  renderOpts(); preview();
+}
+// A new house always starts a clean quote: nothing from the last house carries over.
+function resetQuote(){
+  st = blankQuote();
+  for (const id of ["q-notes", "c-name", "c-phone", "c-email"]) $(id).value = "";
+  $("c-consent").checked = false;
+  paintQuote();
+}
+$("addr").addEventListener("input", () => { st.address = $("addr").value; st.lat = st.lon = null; $("addr-note").textContent = "Tap a house on the Doors map and press Quote, or type the address."; preview(); });
+document.querySelectorAll("[data-story]").forEach(b => b.onclick = () => { st.story = +b.dataset.story; paintQuote(); });
+document.querySelectorAll("[data-svc]").forEach(c => c.addEventListener("change", () => { st.svc[c.dataset.svc] = c.checked; preview(); }));
+document.querySelectorAll("[data-tag]").forEach(b => b.onclick = () => { st.tags[b.dataset.tag] = !st.tags[b.dataset.tag]; b.setAttribute("aria-pressed", !!st.tags[b.dataset.tag]); preview(); });
+document.querySelectorAll("[data-repeat]").forEach(b => b.onclick = () => { st.repeat = +b.dataset.repeat; paintQuote(); });
+$("repeat-price").addEventListener("input", () => { st.repeatPrice = $("repeat-price").value; preview(); });
+function setPanels(n){ st.panels = Math.max(0, Math.min(500, Math.round(n) || 0)); $("panels").value = st.panels; preview(); }
+$("panel-minus").onclick = () => setPanels(st.panels - 1);
+$("panel-plus").onclick = () => setPanels(st.panels + 1);
+$("panels").addEventListener("change", () => setPanels(parseFloat($("panels").value)));
+for (const id of ["q-notes", "c-name", "c-phone", "c-email"]) $(id).addEventListener("input", preview);
+$("clear-quote").onclick = () => { resetQuote(); toast("Cleared"); };
+// "Here": the nearest house address to where you're standing
+$("here").onclick = () => {
+  if (!navigator.geolocation){ toast("Location isn't available here"); return; }
+  $("addr-note").textContent = "Finding where you are…";
+  navigator.geolocation.getCurrentPosition(async pos => {
+    const a = await snapAddress(pos.coords.latitude, pos.coords.longitude).catch(() => null);
+    if (!a){ $("addr-note").textContent = "Couldn't find an address here. Type it instead."; return; }
+    st.address = a.address; st.lat = a.lat; st.lon = a.lon; $("addr").value = a.address; $("addr-note").textContent = "Nearest house to you. Wrong one? Type it."; preview();
+  }, () => { $("addr-note").textContent = "Location is off. Type the address instead."; }, {enableHighAccuracy:true, timeout:10000});
+};
+$("s-seller").value = S.seller;
+$("s-seller").addEventListener("input", () => { S.seller = $("s-seller").value.trim(); store.set(K.settings, S); showWho(); preview(); });
+$("s-seller").addEventListener("change", () => { if (S.seller && team()) queueLeadChanges(leads()); });
+
+async function shareFile(blob, name, title){
+  const file = new File([blob], name, {type: blob.type});
+  try{
+    if (navigator.canShare && navigator.canShare({files:[file]})){ await navigator.share({files:[file], title}); return; }
+  }catch(e){ if (e && e.name === "AbortError") return; }
+  const url = URL.createObjectURL(blob), a = document.createElement("a");
+  a.href = url; a.download = name; document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 60000);
+}
+
+// ---------- the quote, in plain words (the text message and the PDF say the same thing) ----------
+const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+function smsLink(phone, body){ return "sms:" + phone.replace(/[^\d+]/g, "") + (isIOS ? "&" : "?") + "body=" + encodeURIComponent(body); }
+function openSms(url){ location.href = url; }
+const firstName = l => (l.name || "").trim().split(/\s+/)[0] || "";
+function quoteText(l){
+  const q = l.quote, first = firstName(l), me = (S.seller || "").trim(), hi = `Hi${first ? " " + first : ""}, `;
+  const lines = [me ? `${hi}it's ${me} with Saddleback Shine. Here's your quote for ${l.address || "your home"}:`
+                    : `${hi}here's your Saddleback Shine quote for ${l.address || "your home"}:`];
+  if (q.svc.length) lines.push("Includes: " + svcText(q) + ".");
+  if (q.options.length === 1) lines.push((q.options[0].label ? q.options[0].label + ": " : "Price: ") + money(q.options[0].price));
+  else q.options.forEach((o, i) => lines.push(`Option ${i + 1}${o.label ? " - " + o.label : ""}: ${money(o.price)}`));
+  if (q.repeat && q.repeatPrice) lines.push(`Want it kept up? Repeat service ${REPEAT_WORDS[q.repeat]}: ${money(q.repeatPrice)} per visit.`);
+  lines.push((q.options.length > 1 ? "Text back the option you'd like and I'll get you on the schedule." : "Text back if you'd like a spot on the schedule.") + " Reply STOP and I won't text again.");
+  return lines.join("\n");
+}
+function buildPdf(l){
+  const doc = new window.jspdf.jsPDF({unit:"pt", format:"letter"});
+  const W = 612, M = 48, colR = W - M, q = l.quote, me = (S.seller || "").trim(); let y = M;
+  const date = new Date().toLocaleDateString("en-US", {month:"long", day:"numeric", year:"numeric"});
+  const ink = () => doc.setTextColor(16, 33, 43), soft = () => doc.setTextColor(90, 106, 117);
+  doc.setFillColor(8, 119, 201); doc.rect(0, 0, W, 8, "F");
+  doc.setFont("helvetica", "bold"); doc.setFontSize(24); doc.setTextColor(8, 119, 201); doc.text("Saddleback Shine", M, y + 16); y += 36;
+  doc.setFontSize(14); ink(); doc.text("Cleaning quote", M, y); y += 22;
+  doc.setFont("helvetica", "normal"); doc.setFontSize(11); soft();
+  [l.name && "For: " + l.name, l.address && "Home: " + l.address, "Date: " + date, me && "Prepared by: " + me].filter(Boolean).forEach(t => {
+    const ls = doc.splitTextToSize(t, colR - M); doc.text(ls, M, y); y += 15 * ls.length; });
+  y += 14;
+  ink(); doc.setFont("helvetica", "bold"); doc.setFontSize(12); doc.text("What's included", M, y); y += 17;
+  doc.setFont("helvetica", "normal"); doc.setFontSize(11);
+  SVC.filter(([k]) => q.svc.includes(k)).forEach(([k, label]) => { doc.text("•  " + label + (k === "solar" && q.panels ? ` (${q.panels} panel${q.panels === 1 ? "" : "s"})` : ""), M, y); y += 15; });
+  soft(); doc.text("Home details: " + detailText(q), M, y + 4); y += 30;
+  ink(); doc.setFont("helvetica", "bold"); doc.setFontSize(12); doc.text(q.options.length > 1 ? "Your options" : "Price", M, y); y += 8;
+  doc.setDrawColor(219, 228, 234); doc.setLineWidth(1);
+  q.options.forEach((o, i) => {
+    const picked = l.chosen === i && q.options.length > 1;
+    const label = (q.options.length > 1 ? `Option ${i + 1}` + (o.label ? ": " + o.label : "") : (o.label || "Total")) + (picked ? "  (selected)" : "");
+    const ls = doc.splitTextToSize(label, colR - M - 110);
+    doc.setFont("helvetica", "normal"); doc.setFontSize(12); doc.text(ls, M, y + 16);
+    doc.setFont("helvetica", "bold"); doc.setFontSize(14); doc.text(money(o.price), colR, y + 16, {align:"right"});
+    y += 10 + 15 * ls.length; doc.line(M, y, colR, y);
+  });
+  y += 22;
+  if (q.repeat && q.repeatPrice){
+    doc.setFont("helvetica", "normal"); doc.setFontSize(11); ink();
+    doc.text(`Repeat service ${REPEAT_WORDS[q.repeat]}: ${money(q.repeatPrice)} per visit.`, M, y); y += 22;
+  }
+  y += 30; doc.setDrawColor(150, 160, 165);
+  doc.line(M, y, M + 220, y); doc.line(M + 260, y, M + 400, y);
+  doc.setFontSize(9); soft(); doc.text("Accepted by", M, y + 12); doc.text("Date", M + 260, y + 12);
+  return doc;
+}
+$("pdf-btn").onclick = async () => {
+  const f = formLead(), bad = problem(f, false);
+  if (bad){ toast(bad); return; }
+  sharePdf(f);
+};
+async function sharePdf(l){
+  if (!window.jspdf){ toast("PDF maker didn't load. Check your signal"); return; }
+  await shareFile(buildPdf(l).output("blob"), "Saddleback Shine quote" + (l.address ? " - " + l.address.split(",")[0].replace(/[^\w .#-]/g, "") : "") + ".pdf", "Saddleback Shine quote");
+}
+
+// ---------- leads ----------
+const STATUS = {quoted:"Quoted", won:"Won", scheduled:"Scheduled", done:"Done", lost:"Lost"};
+const FOLLOW = [
+  {days:0,  text: l => `Hi${firstName(l) ? " " + firstName(l) : ""}, thanks for talking with me today. Your Saddleback Shine quote is ${money(leadPrice(l))}. Any questions, just text back.`},
+  {days:3,  text: l => `Hi${firstName(l) ? " " + firstName(l) : ""}, checking in on your Saddleback Shine quote for ${l.address || "your home"}. I'm filling the schedule now. Want me to hold a spot for you?`},
+  {days:10, text: l => `Hi${firstName(l) ? " " + firstName(l) : ""}, last check on your Saddleback Shine quote (${money(leadPrice(l))}). I have a few openings this week. Want one?`}
+];
+function nextDue(l){
+  if (l.status !== "quoted" || (l.touches || 0) >= FOLLOW.length || !l.consent || !l.phone) return null;
+  const d = new Date(l.created); d.setDate(d.getDate() + FOLLOW[l.touches || 0].days); return d;
+}
+const leads = () => store.get(K.leads, []);
+// Every price that goes on a quote is logged with what it covered (on this phone, and in the team sheet's Prices tab).
+const priceLog = () => store.get(K.prices, []);
+function logPrices(l){
+  const q = l.quote, log = priceLog();
+  log.unshift({ts: Date.now(), leadId: l.id, seller: S.seller || "", address: l.address, covered: svcText(q), details: detailText(q),
+    options: q.options.map((o, i) => ({label:o.label, price:o.price, def: i === q.def})), repeat: q.repeat, repeatPrice: q.repeatPrice});
+  store.set(K.prices, log.slice(0, 500));
+}
+function saveLead(sent){
+  const f = formLead(), bad = problem(f, sent);
+  if (bad){ toast(bad); return null; }
+  const all = leads(), digits = x => (x || "").replace(/\D/g, "").slice(-10);
+  let l = st.editId ? all.find(x => x.id === st.editId) : null;
+  // the same customer at the same house again: update their quote, don't make a second one
+  if (!l) l = all.find(x => addrKey(x.address) === addrKey(f.address) && digits(x.phone) === digits(f.phone) && (f.phone || x.name === f.name)) || null;
+  if (l){
+    Object.assign(l, {name: f.name || l.name, phone: f.phone || l.phone, email: f.email || l.email || "", address: f.address,
+      consent: l.consent || f.consent, quote: f.quote, touches: Math.max(l.touches || 0, sent ? 1 : 0)});
+    if (f.lat != null){ l.lat = f.lat; l.lon = f.lon; }
+    if (l.chosen != null && !f.quote.options[l.chosen]) l.chosen = null;
+    l.quote.total = leadPrice(l);
+    all.splice(all.indexOf(l), 1); all.unshift(l);
+  } else {
+    l = Object.assign(f, {id: rid(), touches: sent ? 1 : 0});
+    all.unshift(l);
+  }
+  if (st.fromSale && l.status === "quoted"){ l.status = "won"; l.jobAt = Date.now(); }   // sold at the door
+  logPrices(l); saveLeads(all); renderLeads(); renderSched();
+  return l;
+}
+$("send-quote").onclick = () => {
+  const l = saveLead(true); if (!l) return;
+  const url = smsLink(l.phone, quoteText(l));
+  resetQuote(); toast("Saved. Messages should open now"); openSms(url);
+};
+$("save-only").onclick = () => {
+  const sale = st.fromSale, l = saveLead(false); if (!l) return;
+  resetQuote();
+  if (sale && l.status === "won"){ showTab("sched"); openSchedule(l.id); toast("Saved as Won. Pick the day"); }
+  else toast("Quote saved");
+};
+function mutate(id, fn){ const all = leads(), l = all.find(x => x.id === id); if (l){ fn(l); saveLeads(all); renderLeads(); renderSched(); } }
+// Status, the job's day and paid travel together as "the job": jobAt says when it last changed, so an old copy
+// of the customer on another phone can't undo it (the server keeps the newer one).
+function setStatus(x, v){
+  x.status = v; x.jobAt = Date.now();
+  if (v === "quoted" || v === "won" || v === "lost") x.job = null;
+  if (v === "done") x.doneAt = x.doneAt || Date.now(); else { x.doneAt = 0; x.paid = false; x.paidAt = 0; }
+}
+function togglePaid(id){ mutate(id, x => { x.paid = !x.paid; x.paidAt = x.paid ? Date.now() : 0; x.jobAt = Date.now(); }); }
+function paidButton(l){ return btn(l.paid ? "Paid ✓" : "Mark paid", l.paid ? "good" : "primary", () => togglePaid(l.id)); }
+function statusPill(l){
+  if (l.status === "done") return el("span", "pill " + (l.paid ? "paid" : "due"), l.paid ? "Done · paid" : "Done · unpaid");
+  return el("span", "pill " + (l.status === "won" || l.status === "scheduled" ? "won" : ""), STATUS[l.status] || l.status || "");
+}
+function leadCard(l, showDue){
+  const d = nextDue(l), c = el("div", "lead"), who = el("div", "who");
+  c.dataset.lead = l.id;
+  who.append(el("span", "", (l.name || "No name") + " · " + money(leadPrice(l))), showDue ? el("span", "pill due", "Text today") : statusPill(l));
+  c.append(who);
+  c.append(el("div", "muted", [l.address, l.phone, new Date(l.created).toLocaleDateString("en-US", {month:"short", day:"numeric"}), team() && l.seller ? "by " + l.seller : ""].filter(Boolean).join(" · ")));
+  const q = l.quote || {}, os = q.options || [];
+  c.append(el("div", "muted", [svcText(q), os.length > 1 ? os.map(o => money(o.price)).join(" / ") : "", q.repeat && q.repeatPrice ? `repeat ${REPEAT_WORDS[q.repeat]} ${money(q.repeatPrice)}` : ""].filter(Boolean).join(" · ")));
+  if (l.job && l.job.date) c.append(el("div", "muted", "Job: " + dayLabel(l.job.date) + " · " + winLabel(l.job.win) + (l.job.who ? " · " + l.job.who : "")));
+  if (!showDue && d) c.append(el("div", "muted", "Next follow-up " + d.toLocaleDateString("en-US", {month:"short", day:"numeric"})));
+  const row = el("div", "row");
+  if (showDue){
+    const a = link("Send follow-up " + ((l.touches || 0) + 1), "primary", smsLink(l.phone, FOLLOW[l.touches || 0].text(l)));
+    a.onclick = () => { setTimeout(() => mutate(l.id, x => { x.touches = (x.touches || 0) + 1; }), 400); };
+    row.append(a);
+  }
+  const sel = el("select"); sel.setAttribute("aria-label", "Status"); sel.style.width = "auto";
+  for (const v in STATUS) sel.add(new Option(STATUS[v], v, false, l.status === v));
+  sel.onchange = () => {
+    const v = sel.value;
+    if (v === "scheduled" && !(l.job && l.job.date)){ sel.value = l.status; openSchedule(l.id); return; }   // Scheduled needs a day
+    mutate(l.id, x => setStatus(x, v));
+  };
+  row.append(sel);
+  if (l.status === "won") row.append(btn("Schedule", "primary", () => openSchedule(l.id)));
+  if (l.status === "scheduled") row.append(btn("Reschedule", "", () => openSchedule(l.id)));
+  if (l.status === "done") row.append(paidButton(l));
+  c.append(row);
+  const more = el("details", "mini"), mrow = el("div", "row");
+  more.append(el("summary", "", "More"));
+  mrow.append(btn("Change the quote", "", () => editLead(l.id)), btn("PDF", "", () => sharePdf(l)));
+  if (l.phone && l.consent) mrow.append(link("Text the quote", "", smsLink(l.phone, quoteText(l))));
+  if (l.consent) mrow.append(btn("Do not text", "", () => { mutate(l.id, x => { x.consent = false; x.noText = true; }); toast("No more texts to " + (l.name || "this customer")); }));
+  else if (l.noText) mrow.append(el("span", "pill", "Do not text"));
+  more.append(mrow); c.append(more);
+  return c;
+}
+function renderLeads(){
+  const all = leads(), now = new Date(); now.setHours(23, 59, 59);
+  // only your own customers: a teammate's lead is theirs to text (no double texts)
+  const due = all.filter(l => { const d = nextDue(l); return d && d <= now && (!l.seller || !S.seller || l.seller === S.seller); });
+  $("due-count").textContent = due.length ? `(${due.length})` : "";
+  const dueBox = $("leads-due"); dueBox.textContent = "";
+  if (!due.length) dueBox.append(el("p", "muted", "Nobody to text today."));
+  due.forEach(l => dueBox.appendChild(leadCard(l, true)));
+  const allBox = $("leads-all"); allBox.textContent = "";
+  if (!all.length) allBox.append(el("p", "muted", "Saved quotes show up here."));
+  all.forEach(l => allBox.appendChild(leadCard(l, false)));
+}
+function renderPrices(){
+  const box = $("price-list"), log = priceLog(); box.textContent = "";
+  if (!log.length) box.append(el("p", "muted", "Nothing quoted yet."));
+  for (const p of log.slice(0, 100)){
+    const c = el("div", "lead"), who = el("div", "who");
+    who.append(el("span", "", p.address || "No address"), el("span", "pill", new Date(p.ts).toLocaleDateString("en-US", {month:"short", day:"numeric"})));
+    c.append(who, el("div", "", p.options.map(o => (o.label ? o.label + " " : "") + money(o.price) + (o.def && p.options.length > 1 ? " (default)" : "")).join(" · ")
+      + (p.repeat && p.repeatPrice ? ` · repeat ${REPEAT_WORDS[p.repeat]} ${money(p.repeatPrice)}` : "")));
+    c.append(el("div", "muted", [p.covered, p.details, p.seller ? "by " + p.seller : ""].filter(Boolean).join(" · ")));
+    box.append(c);
+  }
+}
+$("price-log").addEventListener("toggle", renderPrices);
+// "Change the quote": the saved quote goes back into the form; Save puts it back on the same customer.
+function editLead(id){
+  const l = leads().find(x => x.id === id); if (!l) return;
+  const q = l.quote || {};
+  resetQuote();
+  st = Object.assign(blankQuote(), {address: l.address || "", lat: l.lat != null ? l.lat : null, lon: l.lon != null ? l.lon : null, story: q.stories === 2 ? 2 : 1,
+    svc: Object.fromEntries((q.svc || []).map(k => [k, true])), panels: q.panels || 0, tags: Object.fromEntries((q.tags || []).map(k => [k, true])),
+    options: (q.options || []).length ? q.options.map(o => ({label: o.label || "", price: String(o.price)})) : [{label:"", price:""}],
+    def: q.def || 0, repeat: q.repeat || 0, repeatPrice: q.repeatPrice ? String(q.repeatPrice) : "", editId: l.id});
+  $("q-notes").value = q.notes || ""; $("c-name").value = l.name || ""; $("c-phone").value = l.phone || ""; $("c-email").value = l.email || ""; $("c-consent").checked = !!l.consent;
+  showTab("quote"); paintQuote(); window.scrollTo({top:0});
+}
+// Back up everything on this phone (quotes, jobs, the price log) as one file through the share sheet.
+$("backup").onclick = async () => {
+  const d = {app:"saddleback-shine", version:1, saved: new Date().toISOString(), leads: leads(), prices: priceLog(), settings: S};
+  const t = new Date(), name = "saddleback-shine-backup-" + ymd(t) + ".json";
+  await shareFile(new Blob([JSON.stringify(d, null, 1)], {type:"application/json"}), name, "Saddleback Shine backup");
+  store.set(K.lastbackup, d.saved); showBackupNote();
+};
+// Restore merges: nothing already on the phone is deleted; a quote with the same id is kept once.
+$("restore-in").addEventListener("change", async ev => {
+  const f = ev.target.files && ev.target.files[0]; if (!f) return;
+  try{
+    const d = JSON.parse(await f.text());
+    if (d.app !== "saddleback-shine") throw new Error("not a backup");
+    const mine = leads(), ids = new Set(mine.map(l => l.id));
+    const addL = (d.leads || []).filter(l => l && l.id && l.quote && !ids.has(l.id));
+    saveLeads(mine.concat(addL).sort((a, b) => b.created - a.created));
+    const log = priceLog(), seen = new Set(log.map(p => p.ts + "|" + p.leadId));
+    store.set(K.prices, log.concat((d.prices || []).filter(p => p && !seen.has(p.ts + "|" + p.leadId))).sort((a, b) => b.ts - a.ts).slice(0, 500));
+    renderLeads(); renderSched(); renderPrices();
+    toast(`Restored ${addL.length} quote${addL.length === 1 ? "" : "s"}`);
+  }catch(e){ toast("That file isn't a Saddleback Shine backup"); }
+  ev.target.value = "";
+});
+function showBackupNote(){
+  const last = store.get(K.lastbackup, null);
+  $("backup-note").textContent = last ? "Last backup: " + new Date(last).toLocaleString("en-US", {month:"short", day:"numeric", hour:"numeric", minute:"2-digit"}) + "." : "Not backed up yet.";
+}
+
+// ---------- schedule: a month grid, the day's jobs, and the Won jobs with no day yet ----------
+// A job is a Won customer with a day and a time window. It lives on the lead, so it syncs the way leads do.
+const WINS = [["8-10","8–10 AM"], ["10-12","10 AM–12 PM"], ["12-2","12–2 PM"], ["2-4","2–4 PM"]];
+const winLabel = k => (WINS.find(w => w[0] === k) || ["", k || "Any time"])[1];
+const winOrder = k => { const i = WINS.findIndex(w => w[0] === k); return i < 0 ? 99 : i; };
+const ymd = d => d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
+const fromYmd = s => { const [y, m, d] = String(s).split("-").map(Number); return new Date(y, m - 1, d); };
+const addDays = (s, n) => { const d = fromYmd(s); d.setDate(d.getDate() + n); return ymd(d); };
+const today = () => ymd(new Date());
+const dayLabel = s => fromYmd(s).toLocaleDateString("en-US", {weekday:"short", month:"short", day:"numeric"});
+const onCalendar = l => !!(l.job && l.job.date && (l.status === "scheduled" || l.status === "done"));
+const dayJobs = day => leads().filter(l => onCalendar(l) && l.job.date === day).sort((a, b) => winOrder(a.job.win) - winOrder(b.job.win) || (a.address || "").localeCompare(b.address || ""));
+const cal = {y: new Date().getFullYear(), m: new Date().getMonth(), sel: today()};
+function renderCal(){
+  const first = new Date(cal.y, cal.m, 1), n = new Date(cal.y, cal.m + 1, 0).getDate(), t = today(), counts = {};
+  for (const l of leads()) if (onCalendar(l)) (counts[l.job.date] = counts[l.job.date] || []).push(l.status === "done");
+  $("cal-title").textContent = first.toLocaleDateString("en-US", {month:"long", year:"numeric"});
+  const g = $("cal-grid"); g.textContent = "";
+  for (let i = 0; i < first.getDay(); i++) g.append(el("span"));
+  for (let d = 1; d <= n; d++){
+    const key = ymd(new Date(cal.y, cal.m, d)), js = counts[key] || [];
+    const b = el("button", "day" + (key === t ? " today" : key < t ? " past" : "")); b.type = "button"; b.dataset.cday = key;
+    b.setAttribute("aria-pressed", key === cal.sel);
+    b.setAttribute("aria-label", dayLabel(key) + (js.length ? `, ${js.length} job${js.length === 1 ? "" : "s"}` : ""));
+    b.append(el("span", "", String(d)));
+    const dots = el("span", "dots");
+    if (js.length > 3) dots.textContent = String(js.length);
+    else js.sort().forEach(done => dots.append(el("i", done ? "done" : "")));
+    b.append(dots);
+    b.onclick = () => { cal.sel = key; renderCal(); renderDay(); };
+    g.append(b);
+  }
+}
+let rainArm = null, moveOpen = null;
+function jobCard(l){
+  const done = l.status === "done", c = el("div", "lead job" + (done ? " done" : "")), who = el("div", "who");
+  c.dataset.job = l.id;
+  who.append(el("span", "win", winLabel(l.job.win)), statusPill(l));
+  c.append(who, el("div", "big", l.address || "No address"), el("div", "", [svcText(l.quote), money(leadPrice(l))].filter(Boolean).join(" · ")));
+  c.append(el("div", "muted", [l.name || "No name", detailText(l.quote), l.job.who ? "Assigned to " + l.job.who : ""].filter(Boolean).join(" · ")));
+  if (l.quote && l.quote.notes) c.append(el("div", "muted", "Notes: " + l.quote.notes));
+  const row = el("div", "row"), nav = link("Navigate", "primary", navUrl(l)); nav.target = "_blank"; nav.rel = "noopener";
+  row.append(nav);
+  if (l.phone) row.append(link("Call", "", "tel:" + l.phone.replace(/[^\d+]/g, "")));
+  if (!done){
+    row.append(btn("Done", "good", () => { mutate(l.id, x => setStatus(x, "done")); toast("Done: " + (l.address || "job")); }));
+    row.append(btn("Reschedule", "", () => { moveOpen = moveOpen === l.id ? null : l.id; renderDay(); }));
+  } else {
+    row.append(paidButton(l), btn("Not done", "", () => mutate(l.id, x => setStatus(x, "scheduled"))));
+  }
+  c.append(row);
+  if (!done && moveOpen === l.id){   // rain days: one more tap moves it, same time window
+    const mv = el("div", "chips");
+    for (const [n, text] of [[1, "Next day"], [2, "In 2 days"], [7, "Next week"]]){
+      const to = addDays(l.job.date, n), b = el("button", "chip mini", text + " (" + dayLabel(to) + ")"); b.type = "button"; b.dataset.move = n;
+      b.onclick = () => moveJob(l.id, to);
+      mv.append(b);
+    }
+    const p = el("button", "chip mini", "Pick a day"); p.type = "button"; p.onclick = () => openSchedule(l.id);
+    mv.append(p); c.append(mv);
+  }
+  return c;
+}
+function moveJob(id, to){
+  moveOpen = null;
+  mutate(id, x => { x.job = Object.assign({}, x.job, {date: to}); x.jobAt = Date.now(); });
+  toast("Moved to " + dayLabel(to));
+}
+function navUrl(l){
+  const dest = l.lat != null && l.lon != null ? l.lat + "," + l.lon : (l.address || "");
+  return isIOS ? "https://maps.apple.com/?dirflg=d&daddr=" + encodeURIComponent(dest) : "https://www.google.com/maps/dir/?api=1&destination=" + encodeURIComponent(dest);
+}
+function renderDay(){
+  const list = dayJobs(cal.sel), open = list.filter(l => l.status === "scheduled");
+  $("day-title").textContent = (cal.sel === today() ? "Today · " : "") + dayLabel(cal.sel) + " · " + (list.length ? `${list.length} job${list.length === 1 ? "" : "s"}` : "no jobs");
+  const box = $("day-list"); box.textContent = "";
+  if (!list.length) box.append(el("p", "muted", "Nothing on this day. Schedule a Won job from the list below."));
+  list.forEach(l => box.append(jobCard(l)));
+  const armed = rainArm && rainArm.day === cal.sel && Date.now() - rainArm.at < 5000;
+  $("day-rain").hidden = open.length < 1;
+  $("day-rain").textContent = armed ? `Tap again: move ${open.length} job${open.length === 1 ? "" : "s"} to ${dayLabel(addDays(cal.sel, 1))}` : "Rain day: move all to the next day";
+}
+$("day-rain").onclick = () => {
+  const day = cal.sel, ids = new Set(dayJobs(day).filter(l => l.status === "scheduled").map(l => l.id)); if (!ids.size) return;
+  if (!(rainArm && rainArm.day === day && Date.now() - rainArm.at < 5000)){
+    rainArm = {day, at: Date.now()}; renderDay();
+    setTimeout(() => { if (rainArm && Date.now() - rainArm.at >= 5000){ rainArm = null; renderDay(); } }, 5100);
+    return;
+  }
+  rainArm = null;
+  const to = addDays(day, 1), all = leads();
+  for (const l of all) if (ids.has(l.id)){ l.job = Object.assign({}, l.job, {date: to}); l.jobAt = Date.now(); }
+  saveLeads(all); renderLeads(); renderSched(); toast(`Moved ${ids.size} job${ids.size === 1 ? "" : "s"} to ${dayLabel(to)}`);
+};
+function renderUnsched(){
+  const list = leads().filter(l => l.status === "won");
+  $("unsched-n").textContent = list.length ? `(${list.length})` : ""; $("unsched-count").textContent = list.length ? `(${list.length})` : "";
+  const box = $("unsched-list"); box.textContent = "";
+  if (!list.length) box.append(el("p", "muted", "No Won jobs waiting for a day."));
+  for (const l of list){
+    const c = el("div", "lead"), who = el("div", "who"); c.dataset.unsched = l.id;
+    who.append(el("span", "", (l.name || "No name") + " · " + money(leadPrice(l))), el("span", "pill won", "Won"));
+    c.append(who, el("div", "muted", [l.address, svcText(l.quote)].filter(Boolean).join(" · ")));
+    const row = el("div", "row"); row.append(btn("Schedule", "primary", () => openSchedule(l.id))); c.append(row);
+    box.append(c);
+  }
+}
+function renderSched(){ renderCal(); renderDay(); renderUnsched(); }
+$("cal-prev").onclick = () => { cal.m--; if (cal.m < 0){ cal.m = 11; cal.y--; } renderCal(); };
+$("cal-next").onclick = () => { cal.m++; if (cal.m > 11){ cal.m = 0; cal.y++; } renderCal(); };
+$("cal-today").onclick = () => { const n = new Date(); cal.y = n.getFullYear(); cal.m = n.getMonth(); cal.sel = today(); renderCal(); renderDay(); };
+// the Schedule sheet: a day, a time window, which option they picked (if the quote had more than one), who's doing it
+let sch = null;
+function openSchedule(id){
+  const l = leads().find(x => x.id === id); if (!l) return;
+  const q = l.quote || {}, t = today(), onSched = $("view-sched").style.display !== "none";
+  sch = {id, date: (l.job && l.job.date) || (onSched && cal.sel >= t ? cal.sel : addDays(t, 1)), win: (l.job && l.job.win) || WINS[0][0],
+    chosen: l.chosen != null ? l.chosen : (q.def || 0), has: !!(l.job && l.job.date)};
+  $("s-addr").textContent = l.address || "No address";
+  $("s-sub").textContent = [l.name, svcText(q)].filter(Boolean).join(" · ");
+  $("s-who").value = (l.job && l.job.who) || "";
+  $("s-unsched").hidden = !sch.has;
+  $("s-save").textContent = sch.has ? "Save the new day" : "Save to the schedule";
+  const quick = $("s-quick"); quick.textContent = "";
+  for (let i = 0; i < 6; i++){
+    const day = addDays(t, i), b = el("button", "chip", i === 0 ? "Today" : i === 1 ? "Tomorrow" : fromYmd(day).toLocaleDateString("en-US", {weekday:"short", day:"numeric"}));
+    b.type = "button"; b.dataset.sday = day; b.onclick = () => { sch.date = day; paintSchedule(); }; quick.append(b);
+  }
+  const wins = $("s-wins"); wins.textContent = "";
+  for (const [k, label] of WINS){ const b = el("button", "chip", label); b.type = "button"; b.dataset.swin = k; b.onclick = () => { sch.win = k; paintSchedule(); }; wins.append(b); }
+  const os = q.options || [], ob = $("s-opts"); ob.textContent = ""; $("s-opt-row").hidden = os.length < 2;
+  os.forEach((o, i) => { const b = el("button", "chip", (o.label || "Option " + (i + 1)) + " · " + money(o.price)); b.type = "button"; b.dataset.sopt = i; b.onclick = () => { sch.chosen = i; paintSchedule(); }; ob.append(b); });
+  paintSchedule(); $("ssheet").hidden = false;
+}
+function paintSchedule(){
+  if (!sch) return;
+  document.querySelectorAll("[data-sday]").forEach(b => b.setAttribute("aria-pressed", b.dataset.sday === sch.date));
+  document.querySelectorAll("[data-swin]").forEach(b => b.setAttribute("aria-pressed", b.dataset.swin === sch.win));
+  document.querySelectorAll("[data-sopt]").forEach(b => b.setAttribute("aria-pressed", +b.dataset.sopt === sch.chosen));
+  $("s-date").value = sch.date;
+}
+function closeSched(){ sch = null; $("ssheet").hidden = true; }
+$("s-close").onclick = closeSched;
+$("s-date").addEventListener("change", () => { if (sch && /^\d{4}-\d\d-\d\d$/.test($("s-date").value)){ sch.date = $("s-date").value; paintSchedule(); } });
+$("s-save").onclick = () => {
+  if (!sch) return;
+  const {id, date, win, chosen} = sch, who = $("s-who").value.trim();
+  mutate(id, x => {
+    x.job = {date, win, who}; x.status = "scheduled"; x.jobAt = Date.now(); x.doneAt = 0;
+    if ((x.quote.options || [])[chosen]){ x.chosen = chosen; x.quote.total = leadPrice(x); }
+  });
+  const d = fromYmd(date); cal.y = d.getFullYear(); cal.m = d.getMonth(); cal.sel = date; moveOpen = null;
+  closeSched(); renderSched(); toast("Scheduled: " + dayLabel(date) + ", " + winLabel(win));
+};
+$("s-unsched").onclick = () => { if (!sch) return; const id = sch.id; closeSched(); mutate(id, x => setStatus(x, "won")); toast("Off the schedule. It's under Unscheduled"); };
+
+// ---------- team sync ----------
+// Leads (with their jobs) and doors save on this phone first (instant, works with no signal), then go up to the
+// team's private Google Sheet in batches. Every change is an event with its own id, so a retry never doubles anything.
+// The page never holds customer data in its code: the sheet's address and team code come from the invite link.
+const team = () => store.get(K.team, null);
+const OUT = {
+  none:  {label:"No answer",           color:"#8a978f"},
+  no:    {label:"Not interested",      color:"#c0392b"},
+  has:   {label:"Already has someone", color:"#7a5cc9"},
+  later: {label:"Come back later",     color:"#e8a317"},
+  quote: {label:"Quote",               color:"#0877c9"},
+  sale:  {label:"Sale",                color:"#2e9e5b"}
+};
+const okSyncUrl = u => /^https:\/\/script\.google\.com\/macros\/s\/[\w-]+\/exec$/.test(u)
+  || (/^(localhost|127\.0\.0\.1)$/.test(location.hostname) && /^http:\/\/127\.0\.0\.1:\d+\/$/.test(u));
+// Invite link: the page address + #join=<sheet address and team code>. The part after # never leaves the phone.
+// (also on hashchange: tapping the link while the page is already open only changes the part after #)
+let joinedNow = false;
+function joinFromLink(text){
+  joinedNow = false;
+  const fromUrl = text === undefined, m = (fromUrl ? location.hash : String(text)).match(/join=([A-Za-z0-9_-]+)/); if (!m) return false;
+  try{
+    const j = JSON.parse(atob(m[1].replace(/-/g, "+").replace(/_/g, "/")));
+    if (j.u && j.c && okSyncUrl(j.u)){ store.set(K.team, {url:j.u, code:j.c}); joinedNow = true; setTimeout(() => toast("Joined the team. Doors, quotes and jobs now sync."), 600); }
+  }catch(e){}
+  if (fromUrl) history.replaceState(null, "", location.pathname + location.search);
+  return joinedNow;
+}
+// A Home Screen app keeps its own storage, separate from Safari, so the link can also be pasted in.
+// An app that isn't joined shows a loud red bar on Doors.
+function showNoSync(){
+  const off = !team(), box = $("d-nosync");
+  const was = box.hidden; box.hidden = !off;
+  if (off){ const n = store.get(K.outbox, []).length; $("nj-sub").textContent = n ? `${n} tap${n === 1 ? "" : "s"} saved on this phone. They send the moment you join.` : "The other phone can't see your marks yet."; }
+  if (was !== box.hidden && $("view-doors").style.display !== "none") setTimeout(sizeMap, 30);
+}
+$("nj-open").onclick = () => { $("nj-box").hidden = !$("nj-box").hidden; if (!$("nj-box").hidden) $("nj-in").focus(); setTimeout(sizeMap, 30); };
+function joinTyped(input){
+  if (!joinFromLink(input.value)){ toast("That isn't an invite link"); return false; }
+  input.value = ""; queueLeadChanges(leads()); syncStatus(); syncNow(); return true;
+}
+$("nj-go").onclick = () => { if (joinTyped($("nj-in"))) $("nj-box").hidden = true; };
+$("join-go").onclick = () => { joinTyped($("join-in")); };
+joinFromLink();
+window.addEventListener("hashchange", () => { joinFromLink(); if (joinedNow && team()){ queueLeadChanges(leads()); syncStatus(); syncNow(); } });
+function inviteLink(){
+  const t = team(); if (!t) return "";
+  const b = btoa(JSON.stringify({u:t.url, c:t.code})).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+  return location.origin + location.pathname + "#join=" + b;
+}
+
+// ----- the outbox -----
+function enqueue(kind, id, data){
+  const ob = store.get(K.outbox, []);
+  ob.push({op: rid(), kind, id, data, seller: S.seller || "", ts: Date.now()});
+  store.set(K.outbox, ob); scheduleSync(400); syncStatus();   // every save sends right away (a short wait batches taps made together)
+}
+// Every write to the leads list goes through here, so any change (new quote, status, a job's day, paid) is queued.
+function saveLeads(all){ store.set(K.leads, all); if (team()) queueLeadChanges(all); }
+function queueLeadChanges(all){
+  if (!S.seller) return;   // wait until this phone knows whose quotes these are
+  const sh = store.get(K.shadow, {}); let n = 0;
+  for (const l of all){
+    if (!l.seller && !(l.id in sh)) l.seller = S.seller;   // made on this phone before it had a name: this seller's own
+    const j = JSON.stringify(l);
+    if (sh[l.id] !== j){ sh[l.id] = j; enqueue("lead", l.id, l); n++; }
+  }
+  if (n){ store.set(K.leads, all); store.set(K.shadow, sh); }
+}
+let syncing = false, syncTimer = null, syncErr = "";
+function scheduleSync(ms){ clearTimeout(syncTimer); syncTimer = setTimeout(syncNow, ms); }
+async function syncNow(){
+  const t = team(); if (!t || syncing) return;
+  syncing = true; syncStatus();
+  const batch = store.get(K.outbox, []).slice(0, 200);
+  try{
+    const ctl = new AbortController(), timer = setTimeout(() => ctl.abort(), 30000);
+    const r = await fetch(t.url, {method:"POST", body: JSON.stringify({code:t.code, since: store.get(K.seq, 0), events: batch}), signal: ctl.signal});
+    clearTimeout(timer);
+    const j = await r.json();
+    if (!j.ok) throw new Error(j.error || "sync failed");
+    const done = new Set(j.applied || []);
+    store.set(K.outbox, store.get(K.outbox, []).filter(e => !done.has(e.op)));
+    if (j.seq < store.get(K.seq, 0)) store.set(K.seq, 0);   // the sheet was reset: pull it all next time
+    mergeRemote(j); store.set(K.seq, j.seq); fillAddresses().catch(() => {}); store.set(K.lastsync, Date.now()); syncErr = "";
+    syncing = false;
+    if (store.get(K.outbox, []).length) scheduleSync(300);
+  }catch(e){
+    syncing = false;
+    syncErr = e.message === "wrong team code" ? "The team code changed. Ask for a new invite link." : "No signal. It sends when you have signal again.";
+  }
+  syncStatus();
+}
+function mergeRemote(j){
+  if (j.deleted && j.deleted.length){   // removed from the sheet (a test, or a mistake): remove here too
+    const gone = new Set(j.deleted), ds = store.get(K.doors, {});
+    for (const id of gone) delete ds[id];
+    store.set(K.doors, ds); store.set(K.leads, leads().filter(l => !gone.has(l.id)));
+    store.set(K.outbox, store.get(K.outbox, []).filter(e => !gone.has(e.id)));
+    renderDoors(); renderLeads(); renderSched();
+  }
+  const pend = store.get(K.outbox, []);
+  const pendLead = new Set(pend.filter(e => e.kind === "lead").map(e => e.id)), pendDoor = new Set(pend.filter(e => e.kind === "door").map(e => e.id));
+  if (j.leads && j.leads.length){
+    const byId = new Map(leads().map(l => [l.id, l])), sh = store.get(K.shadow, {});
+    for (const r of j.leads){ if (pendLead.has(r.id)) continue; byId.set(r.id, r); sh[r.id] = JSON.stringify(r); }
+    store.set(K.leads, [...byId.values()].sort((a, b) => b.created - a.created)); store.set(K.shadow, sh);
+    renderLeads(); renderSched();
+  }
+  if (j.doors && j.doors.length){
+    const ds = store.get(K.doors, {});
+    for (const r of j.doors){
+      for (const a of (r.aliases || [])) if (a !== r.id && !pendDoor.has(a)) delete ds[a];
+      if (!pendDoor.has(r.id)) ds[r.id] = r;
+    }
+    store.set(K.doors, ds); renderDoors();
+  }
+}
+function syncStatus(){
+  const t = team(), n = store.get(K.outbox, []).length, last = store.get(K.lastsync, 0);
+  let msg;
+  if (!t) msg = "Team sync is off on this phone. Open the invite link to turn it on.";
+  else if (syncing) msg = "Syncing…";
+  else if (n) msg = `${n} waiting to send. They go to the team sheet when you have signal. ` + (syncErr && !/No signal/.test(syncErr) ? syncErr : "");
+  else if (syncErr) msg = syncErr;
+  else msg = last ? "✓ All saved to the team sheet · " + new Date(last).toLocaleTimeString("en-US", {hour:"numeric", minute:"2-digit"}) : "Not synced yet.";
+  for (const id of ["sync-status", "sync-status-l", "sync-status-d"]){ const e = $(id); e.textContent = msg; e.classList.toggle("warn", !!(t && (n || syncErr) && !syncing)); }
+  $("invite").hidden = !t;
+  showNoSync();
+  const dot = $("d-sync-dot"); dot.className = "sdot" + (!t ? "" : syncErr && /team code/.test(syncErr) ? " bad" : (n || syncErr) ? " wait" : " ok"); dot.title = msg;
+}
+// When it syncs: on every save (above), when the app opens, when you come back to it, when signal returns,
+// and a slow check every 60 s while it's open to pick up the other phone's changes.
+const SYNC_EVERY_MS = 60000;
+function syncIfOpen(){ if (document.visibilityState === "visible") syncNow(); }
+document.addEventListener("visibilitychange", syncIfOpen);
+addEventListener("pageshow", syncIfOpen);
+addEventListener("online", syncIfOpen);
+setInterval(syncIfOpen, SYNC_EVERY_MS);
+$("sync-now").onclick = () => { if (!team()){ toast("Open the invite link on this phone first"); return; } syncNow(); };
+$("invite").onclick = async () => {
+  const text = "Saddleback Shine team link. Open the app the way you always do (Safari or your Home Screen icon), go to Doors > tap your name > Join with an invite link, and paste this (in Safari you can also just tap it): " + inviteLink();
+  try{ if (navigator.share){ await navigator.share({title:"Saddleback Shine team", text}); return; } }catch(e){ return; }
+  try{ await navigator.clipboard.writeText(text); toast("Invite link copied"); }catch(e){ toast("Couldn't copy on this phone"); }
+};
+
+// ---------- doors: a map that follows you ----------
+const doorsAll = () => store.get(K.doors, {});
+let here = null, picked = null, watchId = null, firstFix = true;
+const dmap = L.map("dmap", {zoomControl:true}).setView([33.60,-117.67], 11);
+L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {maxZoom:20, maxNativeZoom:19, attribution:'© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> · Addresses © <a href="https://overturemaps.org">Overture Maps</a>'}).addTo(dmap);
+const dlayer = L.layerGroup().addTo(dmap);
+let meDot = null, pickDot = null;
+// An iPhone silently stops location updates when the app is put away, so restart them whenever the app
+// comes back, after an error, and if no position arrives for 30 s.
+let lastFixAt = 0, gpsStartedAt = 0, gpsRetry = null;
+function startGPS(){
+  if (watchId !== null || !navigator.geolocation) return;
+  gpsStartedAt = Date.now();
+  watchId = navigator.geolocation.watchPosition(onFix, () => {
+    if (!here) $("d-hint").textContent = "Location is off. Tap a house to pick it.";
+    clearTimeout(gpsRetry); gpsRetry = setTimeout(restartGPS, 5000);
+  }, {enableHighAccuracy:true, maximumAge:5000, timeout:20000});
+}
+function stopGPS(){ clearTimeout(gpsRetry); if (watchId !== null){ navigator.geolocation.clearWatch(watchId); watchId = null; } }
+const onDoors = () => $("view-doors").style.display !== "none" && document.visibilityState === "visible";
+function restartGPS(){ if (!onDoors()) return; stopGPS(); startGPS(); }
+document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible") restartGPS(); else stopGPS(); });
+addEventListener("pageshow", restartGPS);
+setInterval(() => { if (onDoors() && Date.now() - Math.max(lastFixAt, gpsStartedAt) > 30000) restartGPS(); }, 10000);
+let following = true, meRing = null;
+function onFix(pos){
+  const {latitude:lat, longitude:lon, accuracy} = pos.coords;
+  here = {glat:lat, glon:lon, acc:accuracy};
+  lastFixAt = Date.now();
+  if (!meDot){
+    meRing = L.circle([lat, lon], {radius:accuracy, color:"#10212b", weight:1, opacity:.35, fillColor:"#10212b", fillOpacity:.08, interactive:false}).addTo(dmap);
+    meDot = L.circleMarker([lat, lon], {radius:8, color:"#fff", weight:3, fillColor:"#10212b", fillOpacity:1, interactive:false}).addTo(dmap);
+  } else { meDot.setLatLng([lat, lon]); meRing.setLatLng([lat, lon]).setRadius(accuracy); }
+  if (firstFix){ firstFix = false; dmap.setView([lat, lon], 19); }
+  else if (following && $("dsheet").hidden) dmap.panTo([lat, lon], {animate:true});
+  $("d-hint").textContent = "Tap or hold a house";
+}
+// "Me" turns following back on; dragging the map turns it off
+function paintMe(){ $("d-me").classList.toggle("off", !following); }
+dmap.on("dragstart", () => { following = false; paintMe(); });
+$("d-me").onclick = () => { following = true; paintMe(); if (here) dmap.setView([here.glat, here.glon], Math.max(dmap.getZoom(), 18)); else toast("Waiting for your location"); };
+$("d-key").onclick = () => { $("d-legend").hidden = !$("d-legend").hidden; };
+// the map fills the screen under the top bar
+function sizeMap(){
+  const top = $("dmap").getBoundingClientRect().top + window.scrollY;
+  if (top > 0) $("dmap").style.height = Math.max(320, innerHeight - top - 18) + "px";
+  dmap.invalidateSize();
+}
+addEventListener("resize", () => { if ($("view-doors").style.display !== "none") sizeMap(); });
+function mark(p){ return Object.assign(p, {at: Date.now(), from: here && here.glat != null ? [here.glat, here.glon] : null}); }
+// the same street address in two cities is two doors: match only within ~500 ft
+const nearDoor = (x, t) => x.lat == null || t.lat == null || ftBetween([x.lat, x.lon], [t.lat, t.lon]) < 500;
+function findDoor(t){ const ds = doorsAll(); return t.id ? ds[t.id] : (t.addrKey ? Object.values(ds).find(x => x.addrKey === t.addrKey && nearDoor(x, t)) : null); }
+function target(){ return picked; }
+function showTarget(){
+  const t = target(), d = t && findDoor(t);
+  if (pickDot){ dmap.removeLayer(pickDot); pickDot = null; }
+  if (!t) return;
+  $("d-addr").textContent = t.address || "Address not found yet";
+  $("d-sub").textContent = d ? "Last: " + doorLine(d) : "Not knocked yet";
+  $("d-remove").hidden = !d; $("d-remove").textContent = "Remove mark";
+  if (t.lat != null) pickDot = L.circleMarker([t.lat, t.lon], {radius:16, color:"#0877c9", weight:5, fill:false, interactive:false}).addTo(dmap);
+}
+// ---- sheets: one open at a time; the house sheet sits under the house so the highlighted house stays in view
+function saleLabel(text){ const b = $("sale-btn"); b.textContent = ""; b.append(el("i"), text || "Sale"); }
+function closeSheets(){
+  for (const id of ["dsheet", "cbsheet", "tsheet"]) $(id).hidden = true;
+  picked = null; laterFor = null; showTarget();
+}
+document.querySelectorAll("[data-close]").forEach(b => b.onclick = closeSheets);
+$("d-close").onclick = closeSheets;
+function openHouse(t){
+  closeSheets();
+  picked = mark(t);
+  $("d-pick").hidden = false; $("later-box").hidden = true; $("d-fix-row").hidden = true;
+  saleLabel(); armed = null;
+  $("dsheet").hidden = false; showTarget();
+  // keep the house above the sheet
+  if (t.lat != null) requestAnimationFrame(() => {
+    const pt = dmap.latLngToContainerPoint([t.lat, t.lon]), h = $("dmap").clientHeight, sheetTop = $("dsheet").getBoundingClientRect().top - $("dmap").getBoundingClientRect().top;
+    const want = Math.max(60, Math.min(h * .3, sheetTop - 70));
+    dmap.panBy([0, pt.y - want], {animate:true});
+  });
+}
+function openSheet(id){ closeSheets(); $(id).hidden = false; }
+// when is stored as "tomorrow@18:00" or "weekend-6@10:00" (day 6 = Sat, 0 = Sun); the due time is d.due
+function parseWhen(w){ const m = String(w || "").match(/^(tonight|tomorrow|weekend)(?:-([06]))?(?:@(\d\d:\d\d))?$/); return m ? {when:m[1], day:m[2] ?? "", time:m[3] || ""} : {when:"", day:"", time:""}; }
+function clock(t){ if (!t) return ""; const [h, m] = t.split(":").map(Number); return (h % 12 || 12) + (m ? ":" + String(m).padStart(2, "0") : "") + (h < 12 ? " AM" : " PM"); }
+function whenLabel(d){
+  const w = parseWhen(d.when); if (!w.when) return "";
+  const day = w.when === "weekend" ? (w.day === "0" ? "Sun" : w.day === "6" ? "Sat" : "Weekend") : {tonight:"Tonight", tomorrow:"Tomorrow"}[w.when];
+  return day + (w.time ? " " + clock(w.time) : "");
+}
+function doorLine(d){
+  const o = OUT[d.outcome]?.label || d.outcome || "";
+  const extra = d.outcome === "later" ? [d.name, whenLabel(d)].filter(Boolean).join(" · ") : "";
+  const by = d.outcome === "later" ? (d.laterBy || d.seller) : d.seller;   // a come-back belongs to whoever set it
+  return o + (extra ? ": " + extra : "") + (by ? " (" + by + ")" : "");
+}
+// tap a dot = that door; tap anywhere else = the nearest house to the tap
+let lastPick = 0;
+async function pickHouseAt(ll){
+  if (Date.now() - lastPick < 700) return;   // a hold also fires the map's own long-press event: one pick only
+  lastPick = Date.now();
+  if (dmap.getZoom() < 17){ dmap.setView(ll, 18); toast("Zoomed in. Now tap the house"); return; }   // too far out to hit the right house
+  const a = await snapAddress(ll.lat, ll.lng).catch(() => null);
+  if (!a){ toast("No house address there"); return; }
+  const d = findDoor(a);
+  openHouse(d ? {id:d.id, address:d.address, addrKey:d.addrKey, lat:d.lat, lon:d.lon} : a);
+}
+// press and hold: a ring grows under the finger; at 0.45 s the house under it opens (moving cancels)
+let holdT = null, holdAt = 0, holdStart = null;
+dmap.on("click", ev => { if (Date.now() - holdAt > 900) pickHouseAt(ev.latlng); });
+dmap.on("contextmenu", ev => pickHouseAt(ev.latlng));   // Leaflet's own long press
+const dmapEl = $("dmap");
+dmapEl.addEventListener("touchstart", e => {
+  if (e.touches.length !== 1) { clearTimeout(holdT); $("hold-ring").hidden = true; return; }
+  const r = dmapEl.getBoundingClientRect(), x = e.touches[0].clientX - r.left, y = e.touches[0].clientY - r.top;
+  holdStart = [x, y]; const ring = $("hold-ring"); ring.style.left = x + "px"; ring.style.top = y + "px";
+  ring.hidden = true; void ring.offsetWidth;
+  clearTimeout(holdT);
+  holdT = setTimeout(() => { ring.hidden = true; holdAt = Date.now(); pickHouseAt(dmap.containerPointToLatLng(holdStart)); }, 450);
+  setTimeout(() => { if (holdT && holdStart) ring.hidden = false; }, 120);
+}, {passive:true});
+dmapEl.addEventListener("touchmove", e => {
+  if (!holdStart) return;
+  const r = dmapEl.getBoundingClientRect(), dx = e.touches[0].clientX - r.left - holdStart[0], dy = e.touches[0].clientY - r.top - holdStart[1];
+  if (Math.hypot(dx, dy) > 12){ clearTimeout(holdT); holdT = null; holdStart = null; $("hold-ring").hidden = true; }
+}, {passive:true});
+dmapEl.addEventListener("touchend", () => { clearTimeout(holdT); holdT = null; holdStart = null; $("hold-ring").hidden = true; }, {passive:true});
+$("d-type").onclick = () => { $("d-fix-row").hidden = false; $("d-fix").focus(); };
+$("d-fix-go").onclick = () => {
+  const v = $("d-fix").value.trim(); if (!v) return;
+  const t = target() || {};
+  picked = mark({address: v, addrKey: addrKey(v), lat: t.lat ?? null, lon: t.lon ?? null});
+  $("d-fix").value = ""; $("d-fix-row").hidden = true; showTarget(); toast("Using " + v);
+};
+document.querySelectorAll("[data-door]").forEach(b => b.onclick = () => knock(b.dataset.door));
+let laterFor = null, laterWhen = "", armed = null;
+// take a wrong mark off the map (two taps; it leaves both phones and the counts)
+$("d-remove").onclick = () => {
+  const t = target(), d = t && findDoor(t); if (!d) return;
+  if (!armedOk("rm|" + d.id)){
+    $("d-remove").textContent = "Tap again to remove " + (d.address || "this mark");
+    setTimeout(() => { if (!armed || armed.key !== "rm|" + d.id) $("d-remove").textContent = "Remove mark"; }, 5100);
+    return;
+  }
+  const ds = store.get(K.doors, {}); delete ds[d.id]; store.set(K.doors, ds);
+  enqueue("door", d.id, {id: d.id, remove: true});
+  closeSheets(); renderDoors(); toast("Removed: " + (d.address || "mark"));
+};
+function armedOk(key){
+  if (armed && armed.key === key && Date.now() - armed.at < 5000){ armed = null; saleLabel(); return true; }
+  armed = {key, at: Date.now()};
+  setTimeout(() => { if (armed && armed.key === key){ armed = null; saleLabel(); } }, 5000);
+  return false;
+}
+function knock(outcome){
+  if (!S.seller){ openSheet("tsheet"); $("who").focus(); toast("Type the knocker's name first"); return; }
+  const t = target();
+  if (!t){ toast("Tap a house first"); return; }
+  const ds = doorsAll();
+  let d = findDoor(t);
+  // the house must be unmistakable before a Sale, and one stray tap can't erase a Sale
+  if (outcome === "sale" && !armedOk("sale|" + (d ? d.id : t.addrKey || t.address))){
+    saleLabel("Tap again: Sale at " + (t.address || "this house")); return;
+  }
+  if (d && d.outcome === "sale" && outcome !== "sale" && outcome !== "none" && !armedOk("unsale|" + d.id + outcome)){
+    toast(`This house is a Sale. Tap "${OUT[outcome].label}" again to change it.`); return;
+  }
+  if (!d) d = {id: rid(), address: t.address || "", addrKey: t.addrKey || "", lat: t.lat, lon: t.lon, outcome: "", knocks: 0};
+  // fixing your own mark from the last 15 min replaces it (No answer too) and isn't a new knock
+  const fix = !!(d.outcome && d.outBy === S.seller && Date.now() - (d.outAt || 0) < 15 * 60000);   // only whoever set the current answer
+  const kept = outcome === "none" && d.outcome && d.outcome !== "none" && !fix;
+  if (!kept && d.outcome !== outcome){ d.outBy = S.seller; d.outAt = Date.now(); }
+  if (!kept) d.outcome = outcome;
+  if (outcome === "later") d.laterBy = S.seller;
+  if (!fix) d.knocks = (d.knocks || 0) + 1;
+  d.seller = S.seller; d.updated = Date.now();
+  ds[d.id] = d; store.set(K.doors, ds);
+  enqueue("door", d.id, Object.assign({id:d.id, address:d.address, addrKey:d.addrKey, lat:d.lat, lon:d.lon, outcome}, outcome === "later" ? {laterBy: S.seller} : {}, fix ? {fix:true} : {}));
+  renderDoors();
+  toast(kept ? `Kept "${OUT[d.outcome].label}". Wrong? Use Remove mark.` : `${OUT[outcome].label}: ${d.address || "saved"}`);
+  // Come back later is saved already; the sheet now asks when and who (a tap must never wait on typing)
+  if (outcome === "later" && !kept){
+    laterFor = d.id; const w = parseWhen(d.when); laterWhen = w.when || "tonight"; laterDay = w.day; laterTime = w.time;
+    $("later-addr").textContent = "Come back later: " + (d.address || "this house");
+    $("later-name").value = d.name || "";
+    paintLater(); $("d-pick").hidden = true; $("later-box").hidden = false;
+    return;
+  }
+  closeSheets();
+  // Quote and Sale both open the quote with the house filled in; a Sale's quote saves as Won
+  if (outcome === "quote" || outcome === "sale") startQuote(d, outcome === "sale");
+}
+// picking Tonight / Tomorrow / Weekend then asks what time (and Sat or Sun for the weekend)
+let laterDay = "", laterTime = "";
+function paintLater(){
+  document.querySelectorAll("[data-when]").forEach(x => x.setAttribute("aria-pressed", x.dataset.when === laterWhen));
+  document.querySelectorAll("[data-day]").forEach(x => x.setAttribute("aria-pressed", x.dataset.day === laterDay));
+  document.querySelectorAll("[data-time]").forEach(x => x.setAttribute("aria-pressed", x.dataset.time === laterTime));
+  $("later-time").value = laterTime && ![...document.querySelectorAll("[data-time]")].some(x => x.dataset.time === laterTime) ? laterTime : "";
+  $("later-day-row").hidden = laterWhen !== "weekend";
+  $("later-time-row").hidden = !laterWhen;
+}
+document.querySelectorAll("[data-when]").forEach(b => b.onclick = () => {
+  laterWhen = laterWhen === b.dataset.when ? "" : b.dataset.when;
+  if (laterWhen === "weekend" && !laterDay) laterDay = "6";
+  paintLater();
+});
+document.querySelectorAll("#later-box [data-day]").forEach(b => b.onclick = () => { laterDay = b.dataset.day; paintLater(); });
+document.querySelectorAll("[data-time]").forEach(b => b.onclick = () => { laterTime = laterTime === b.dataset.time ? "" : b.dataset.time; paintLater(); });
+$("later-time").addEventListener("change", () => { laterTime = $("later-time").value || ""; paintLater(); });
+function whenCode(){ return laterWhen ? laterWhen + (laterWhen === "weekend" && laterDay ? "-" + laterDay : "") + (laterTime ? "@" + laterTime : "") : ""; }
+function dueAt(code){
+  const w = parseWhen(code); if (!w.when) return 0;
+  const n = new Date(), d = new Date(n);
+  const def = {tonight:"17:00", tomorrow:"16:00", weekend:"10:00"}[w.when], [h, m] = (w.time || def).split(":").map(Number);
+  if (w.when === "tomorrow") d.setDate(d.getDate() + 1);
+  if (w.when === "weekend"){ const want = w.day === "0" ? 0 : 6; d.setDate(d.getDate() + (want - d.getDay() + 7) % 7); }
+  d.setHours(h, m, 0, 0);
+  return w.when === "tomorrow" ? +d : Math.max(+d, +n);
+}
+$("later-save").onclick = () => {
+  const ds = doorsAll(), d = laterFor && ds[laterFor];
+  if (d){
+    d.name = $("later-name").value.trim(); d.when = whenCode(); d.due = dueAt(d.when);
+    ds[d.id] = d; store.set(K.doors, ds);
+    enqueue("door", d.id, {id:d.id, outcome:"later", name:d.name, when:d.when, due:d.due, fill:true});
+    toast("Saved" + (d.name ? ": " + d.name : "") + (d.when ? " · " + whenLabel(d) : ""));
+  }
+  closeSheets(); renderDoors();
+};
+$("later-skip").onclick = () => { closeSheets(); toast("Saved: Come back later"); };
+// Quote / Sale: open the quote with the house already filled in
+function startQuote(d, sale){
+  resetQuote();
+  st.address = d.address || ""; st.lat = d.lat != null ? d.lat : null; st.lon = d.lon != null ? d.lon : null; st.fromSale = !!sale;
+  showTab("quote"); paintQuote();
+  window.scrollTo({top:0});
+}
+// doors logged with no signal get their address once the address tile loads
+let filling = false;
+async function fillAddresses(){
+  if (filling) return; filling = true;
+  try{
+    for (const id of Object.keys(doorsAll())){
+      const d0 = doorsAll()[id];
+      if (!d0 || d0.address || d0.lat == null || (d0.seller && d0.seller !== S.seller)) continue;   // your own doors only
+      const a = await snapAddress(d0.lat, d0.lon).catch(() => null); if (!a) continue;
+      const ds = doorsAll(), d = ds[id]; if (!d || d.address) continue;   // re-read after the wait: never write back a stale copy
+      d.address = a.address; d.addrKey = a.addrKey; d.lat = a.lat; d.lon = a.lon; ds[id] = d; store.set(K.doors, ds);
+      enqueue("door", id, {id, address:d.address, addrKey:d.addrKey, lat:d.lat, lon:d.lon, fill:true});
+    }
+  } finally { filling = false; }
+}
+const TODAY_COLS = ["none", "no", "has", "later", "quote", "sale"];
+function renderDoors(){
+  dlayer.clearLayers();
+  const ds = Object.values(doorsAll());
+  for (const d of ds){
+    if (d.lat == null) continue;
+    L.circleMarker([d.lat, d.lon], {radius:9, color:"#ffffff", weight:2, fillColor:(OUT[d.outcome] || OUT.none).color, fillOpacity:1, bubblingMouseEvents:false})
+      .on("click", () => openHouse({id:d.id, address:d.address, addrKey:d.addrKey, lat:d.lat, lon:d.lon}))
+      .addTo(dlayer);
+  }
+  // today, per knocker (a door counts for whoever touched it last)
+  const start = new Date(); start.setHours(0,0,0,0);
+  const rows = {};
+  for (const d of ds){
+    if (!d.updated || d.updated < +start) continue;
+    const who = d.seller || "?"; rows[who] = rows[who] || {doors:0};
+    rows[who].doors++; rows[who][d.outcome] = (rows[who][d.outcome] || 0) + 1;
+  }
+  const body = $("d-today"), names = Object.keys(rows).sort(); body.textContent = "";
+  if (!names.length){ const tr = el("tr"), td = el("td", "muted", "No doors yet today."); td.colSpan = 8; td.style.textAlign = "left"; tr.append(td); body.append(tr); }
+  for (const n of names){ const tr = el("tr"); tr.append(el("td", "", n), el("td", "", String(rows[n].doors)), ...TODAY_COLS.map(k => el("td", "", String(rows[n][k] || 0)))); body.append(tr); }
+  const mine = rows[S.seller] || {doors:0};
+  $("d-today-chip").textContent = `Today ${mine.doors}` + (mine.sale ? ` · ${mine.sale} sale${mine.sale > 1 ? "s" : ""}` : "");
+  renderComeBack();
+  showTarget();
+}
+// Come back list: every open "Come back later" from the whole team, due ones first
+function renderComeBack(){
+  const now = Date.now(), pos = here && here.glat != null ? [here.glat, here.glon] : null;
+  const list = Object.values(doorsAll()).filter(d => d.outcome === "later" && d.lat != null);
+  const dist = d => pos ? ftBetween(pos, [d.lat, d.lon]) : 0;
+  list.sort((a, b) => ((a.due || Infinity) - (b.due || Infinity)) || (dist(a) - dist(b)));
+  const due = list.filter(d => d.due && d.due <= now).length;
+  $("d-cb-chip").classList.toggle("due", due > 0);
+  $("d-cb-chip").textContent = "Come back " + list.length + (due ? ` · ${due} due` : "");
+  const box = $("cb-list"); box.textContent = "";
+  if (!list.length) box.append(el("p", "muted", "No come-backs right now."));
+  for (const d of list){
+    const b = el("button", "cb" + (d.due && d.due <= now ? " due" : "")); b.type = "button";
+    b.append(el("b", "", d.address || "No address yet"),
+      el("span", "muted", [d.name, whenLabel(d), (d.laterBy || d.seller) ? "by " + (d.laterBy || d.seller) : "", pos ? Math.round(dist(d)) + " ft away" : ""].filter(x => x && x.trim()).join(" · ")));
+    b.onclick = () => { closeSheets(); following = false; paintMe(); dmap.setView([d.lat, d.lon], 19); setTimeout(() => openHouse({id:d.id, address:d.address, addrKey:d.addrKey, lat:d.lat, lon:d.lon}), 250); };
+    box.appendChild(b);
+  }
+}
+// your first name: tags every door and quote, so the team sees who did what
+function showWho(){
+  if (document.activeElement !== $("who")) $("who").value = S.seller || "";
+  if (document.activeElement !== $("s-seller")) $("s-seller").value = S.seller || "";
+  $("d-knocker").textContent = S.seller ? S.seller : "Set your name";
+}
+$("d-knocker").onclick = () => { openSheet("tsheet"); $("who").focus(); };
+$("d-today-chip").onclick = () => openSheet("tsheet");
+$("d-cb-chip").onclick = () => { renderComeBack(); openSheet("cbsheet"); };
+$("d-sync-dot").onclick = () => openSheet("tsheet");
+$("who").addEventListener("change", () => {
+  const v = $("who").value.trim(); if (!v) return;
+  S.seller = v; store.set(K.settings, S); showWho();
+  if (team()) queueLeadChanges(leads());
+  toast("Hi " + v);
+});
+
+// ---------- new version check ----------
+// When the app comes back to the front and every 30 min. It refreshes by itself only when nothing is open;
+// otherwise a "New version ready" pill. Taps are saved first, so nothing is lost.
+// APP_VERSION is restamped (yyyymmddHHMMSS) each time the page is published; "dev" turns the check off.
+const APP_VERSION = "20261118141201";
+function idleForReload(){
+  for (const id of ["dsheet", "cbsheet", "tsheet", "ssheet"]) if (!$(id).hidden) return false;
+  const a = document.activeElement; if (a && /INPUT|TEXTAREA|SELECT/.test(a.tagName)) return false;
+  if (quoteDirty()) return false;   // a quote in progress
+  return true;
+}
+async function checkVersion(){
+  if (APP_VERSION === "dev" || !navigator.onLine) return;
+  try{
+    const txt = await (await fetch("./index.html?v=" + Date.now(), {cache:"no-store"})).text();
+    const m = txt.match(/const APP_VERSION = "([^"]+)"/);
+    if (!m || m[1] === APP_VERSION) return;
+    if (idleForReload()) location.reload(); else $("upd").hidden = false;
+  }catch(e){}
+}
+$("upd").onclick = () => location.reload();
+document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible") checkVersion(); });
+setInterval(checkVersion, 30 * 60000);
+// Opens with no signal: a service worker keeps the page and its libraries
+if ("serviceWorker" in navigator && location.protocol === "https:") navigator.serviceWorker.register("sw.js").catch(() => {});
+setInterval(() => { if ($("view-doors").style.display !== "none") renderComeBack(); }, 60000);
+
+// ---------- tabs ----------
+const VIEWS = ["doors", "quote", "leads", "sched"];
+function showTab(t){
+  for (const v of VIEWS){ $("view-" + v).style.display = t === v ? (v === "doors" ? "block" : "grid") : "none"; $("tab-" + v).setAttribute("aria-selected", t === v); }
+  closeSched();
+  if (t === "doors"){ startGPS(); showWho(); renderDoors(); setTimeout(sizeMap, 50); fillAddresses().catch(() => {}); if (!S.seller) setTimeout(() => { if (onDoors()) openSheet("tsheet"); }, 300); }
+  else { stopGPS(); closeSheets(); }
+  if (t === "leads"){ renderLeads(); if ($("price-log").open) renderPrices(); }
+  if (t === "sched") renderSched();
+}
+for (const v of VIEWS) $("tab-" + v).onclick = () => showTab(v);
+
+showWho(); showBackupNote(); paintQuote(); renderLeads(); renderSched(); syncStatus();
+showTab("doors");
+if (team()){ queueLeadChanges(leads()); syncNow(); }
+</script>
+</body>
+</html>
