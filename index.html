@@ -16,56 +16,64 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <style>
-/* One phone column. Clean white with one water-blue accent. The door colors on the map are a key, not branding. */
+/* One phone column. White with one water-blue accent. Quiet headers, hairlines instead of boxes, one primary button per screen.
+   The door colors on the map are a key, not branding. */
 :root{
-  --bg:#f6f9fb; --surface:#ffffff; --ink:#10212b; --muted:#5a6a75; --line:#dbe4ea;
-  --accent:#0877c9; --accent-ink:#ffffff; --accent-soft:#e4f2fc; --ok:#2e9e5b; --warn:#b4441c; --warn-soft:#fbe6dc;
+  --bg:#f4f8fb; --surface:#ffffff; --ink:#10212b; --muted:#5a6a75; --line:#e3eaef;
+  --accent:#0877c9; --accent-ink:#ffffff; --accent-soft:#e4f2fc; --ok:#2e9e5b; --ok-soft:#e3f5ea; --warn:#b4441c; --warn-soft:#fbe6dc;
   --display:"Space Grotesk",ui-sans-serif,system-ui,sans-serif;
   --body:"Inter",ui-sans-serif,system-ui,-apple-system,sans-serif;
+  --hh:44px;
   color-scheme:light;
 }
 *{box-sizing:border-box}
 [hidden]{display:none!important}
 html,body{margin:0}
-body{background:var(--bg);color:var(--ink);font:15px/1.45 var(--body);
-  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));
-  padding-block:calc(10px + env(safe-area-inset-top,0px)) calc(16px + env(safe-area-inset-bottom,0px))}
-main{max-width:560px;margin:0 auto;display:grid;gap:12px}
-h1{font:700 20px/1.1 var(--display);margin:0;letter-spacing:-.01em;display:flex;align-items:center;gap:8px}
-h1 .drop{width:14px;height:14px;background:var(--accent);border-radius:0 60% 60% 60%;transform:rotate(45deg);flex:none}
-h2{font:700 14px/1.2 var(--display);margin:0;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
-.top{display:grid;gap:8px}
-.tabs{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:3px}
-.tabs button{border:0;background:none;color:var(--muted);font:600 14px var(--body);padding:10px 2px;border-radius:9px;white-space:nowrap}
-.tabs button[aria-selected="true"]{background:var(--accent);color:var(--accent-ink)}
-.card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px;display:grid;gap:10px;min-width:0}
-input,select,textarea{font:16px var(--body);color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:9px;padding:10px 11px;width:100%;min-width:0}
+body{background:#fff;color:var(--ink);font:15px/1.45 var(--body)}
+h2{font:600 12px/1.2 var(--body);margin:0 0 4px;text-transform:uppercase;letter-spacing:.07em;color:var(--muted)}
+.topbar{position:sticky;top:0;z-index:900;background:#fff;display:flex;align-items:center;justify-content:space-between;gap:10px;
+  padding:calc(8px + env(safe-area-inset-top,0px)) max(16px,env(safe-area-inset-right,0px)) 8px max(16px,env(safe-area-inset-left,0px))}
+.topbar h1{font:700 24px/1.1 var(--display);margin:0;letter-spacing:-.01em}
+.plus{width:38px;height:38px;border-radius:99px;border:1.5px solid var(--accent);background:#fff;color:var(--accent);padding:0;display:grid;place-items:center}
+.plus svg{width:20px;height:20px;stroke:currentColor;stroke-width:2;stroke-linecap:round;fill:none}
+main{max-width:560px;margin:0 auto;display:grid;gap:18px;
+  padding:6px max(16px,env(safe-area-inset-right,0px)) calc(92px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px))}
+main>*{min-width:0}
+.tabbar{position:fixed;left:0;right:0;bottom:0;z-index:900;background:#fff;border-top:1px solid var(--line);display:grid;grid-template-columns:repeat(5,1fr);
+  padding:6px max(8px,env(safe-area-inset-right,0px)) calc(6px + env(safe-area-inset-bottom,0px)) max(8px,env(safe-area-inset-left,0px))}
+.tabbar button{border:0;background:none;color:#7b8a94;display:grid;justify-items:center;gap:2px;font:600 11px var(--body);padding:4px 0;position:relative}
+.tabbar svg{width:25px;height:25px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.tabbar button[aria-selected="true"]{color:var(--accent)}
+.badge{position:absolute;top:0;left:calc(50% + 6px);min-width:17px;height:17px;border-radius:99px;background:var(--warn);color:#fff;font:700 10px/17px var(--body);padding:0 4px;text-align:center}
+.badge:empty{display:none}
+input,select,textarea{font:16px var(--body);color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:10px 11px;width:100%;min-width:0}
 textarea{resize:vertical}
 input:focus-visible,select:focus-visible,textarea:focus-visible,button:focus-visible,a:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 button{font:600 15px var(--body);cursor:pointer}
-.btn{border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:9px;padding:10px 14px;text-decoration:none;display:inline-block;font:600 15px var(--body);text-align:center}
+.btn{border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:10px;padding:10px 14px;text-decoration:none;display:inline-block;font:600 15px var(--body);text-align:center}
 .btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
 .btn.small{padding:7px 11px;font-size:14px}
 .btn.good{background:var(--ok);border-color:var(--ok);color:#fff}
 .btn:disabled{opacity:.45;cursor:not-allowed}
+.btn.block{display:block;width:100%}
 .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
 .row>input{flex:1}
 .muted{color:var(--muted);font-size:13px}
 .muted.warn{color:var(--warn);font-weight:600}
 .results{display:grid;gap:8px}
-.seg{display:grid;grid-template-columns:1fr 1fr;gap:4px;background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:3px}
+.seg{display:grid;grid-template-columns:1fr 1fr;gap:3px;background:var(--bg);border-radius:10px;padding:3px}
 .seg.three{grid-template-columns:repeat(3,1fr)} .seg.four{grid-template-columns:repeat(4,1fr)}
-.seg button{border:0;background:none;color:var(--muted);padding:12px 4px;border-radius:7px;font:600 14px var(--body)}
-.seg button[aria-pressed="true"]{background:var(--surface);color:var(--accent);box-shadow:0 0 0 1px var(--accent)}
+.seg button{border:0;background:none;color:var(--muted);padding:10px 4px;border-radius:8px;font:600 14px var(--body)}
+.seg button[aria-pressed="true"]{background:var(--surface);color:var(--accent);box-shadow:0 1px 3px rgba(16,33,43,.18)}
 .q{display:grid;gap:6px}
 .qlabel{font:600 14px var(--body)}
-.chips{display:flex;gap:6px;flex-wrap:wrap}
+.chips{display:flex;gap:5px;flex-wrap:wrap}
 .chip{border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:99px;padding:11px 16px;font:600 14px var(--body)}
 .chip[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
-.chip.mini{padding:6px 11px;font-size:13px}
+.chip.mini{padding:6px 8px;font-size:13px}
 .stepper{display:grid;grid-template-columns:1fr auto;align-items:center;gap:10px}
 .ctl{display:flex;align-items:center;gap:6px}
-.ctl button{width:46px;height:46px;border-radius:9px;border:1px solid var(--line);background:var(--surface);color:var(--ink);font:600 20px/1 var(--body)}
+.ctl button{width:46px;height:46px;border-radius:10px;border:1px solid var(--line);background:var(--surface);color:var(--ink);font:600 20px/1 var(--body)}
 .ctl input{width:74px;text-align:center;font-weight:600}
 .checks{display:grid;grid-template-columns:1fr 1fr;gap:6px}
 .checks label{display:flex;gap:9px;align-items:center;border:1px solid var(--line);border-radius:10px;padding:12px 10px;font:600 14px var(--body);min-width:0}
@@ -82,23 +90,91 @@ button{font:600 15px var(--body);cursor:pointer}
 .flag.ok{background:var(--accent-soft);color:var(--accent)}
 .grid2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 label.f{display:grid;gap:4px;font-size:13px;color:var(--muted)}
-.lead{border:1px solid var(--line);border-radius:12px;padding:12px;display:grid;gap:6px;background:var(--surface);min-width:0}
+.sec{display:grid;gap:10px}
+.sec h2,.sec p{margin:0}
+.lead{border-bottom:1px solid var(--line);padding:12px 0;display:grid;gap:6px;min-width:0}
+.lead:last-child{border-bottom:0}
+.lead.solo{border:0;padding:0}
 .lead .who{display:flex;justify-content:space-between;gap:8px;font-weight:600;align-items:flex-start}
 .lead .who span:first-child{overflow-wrap:anywhere}
-.lead .big{font:700 18px/1.2 var(--display);overflow-wrap:anywhere}
-.lead.done{background:var(--bg)}
-.pill{font:600 12px var(--body);padding:2px 8px;border-radius:99px;background:var(--bg);border:1px solid var(--line);white-space:nowrap}
-.pill.due{background:var(--warn-soft);color:var(--warn);border-color:var(--warn)}
-.pill.won{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
-.pill.paid{background:var(--ok);color:#fff;border-color:var(--ok)}
-.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(20px + env(safe-area-inset-bottom,0px));z-index:1300;max-width:calc(100vw - 32px);background:var(--ink);color:#fff;padding:9px 14px;border-radius:10px;font-weight:600;font-size:14px;text-align:center}
-.num{display:inline-grid;place-items:center;width:22px;height:22px;border-radius:99px;background:var(--accent);color:var(--accent-ink);font:700 13px var(--body);margin-right:6px;vertical-align:1px}
+.lead .big{font:700 20px/1.2 var(--display);overflow-wrap:anywhere}
+.pill{font:600 12px var(--body);padding:2px 8px;border-radius:99px;background:var(--bg);white-space:nowrap}
+.pill.due{background:var(--warn-soft);color:var(--warn)}
+.pill.won{background:var(--accent-soft);color:var(--accent)}
+.pill.paid{background:var(--ok-soft);color:var(--ok)}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(84px + env(safe-area-inset-bottom,0px));z-index:1300;max-width:calc(100vw - 32px);background:var(--ink);color:#fff;padding:9px 14px;border-radius:10px;font-weight:600;font-size:14px;text-align:center}
 details.mini>summary{cursor:pointer;color:var(--muted);font-size:13px;padding:4px 0}
 details.mini[open]>summary{margin-bottom:6px}
 .filebtn{display:inline-block;text-align:center}
 table{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:14px}
 td,th{padding:5px 4px;border-bottom:1px solid var(--line);text-align:right}
 td:first-child,th:first-child{text-align:left}
+/* lists: plain rows with a hairline, no boxes */
+.list{display:grid}
+.item{display:flex;align-items:center;gap:10px;width:100%;text-align:left;background:none;border:0;border-bottom:1px solid var(--line);padding:12px 0;color:var(--ink);font:500 15px var(--body);min-width:0}
+.item:last-child{border-bottom:0}
+.item .grow{flex:1;min-width:0;display:grid;gap:1px}
+.item .grow b{font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.item .grow span{color:var(--muted);font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.item .end{display:grid;justify-items:end;gap:3px;flex:none;font:700 15px var(--display)}
+.item .chev{color:#b0bcc4;flex:none;font-size:20px;line-height:1}
+.item .win{color:var(--accent);font-weight:700;font-size:12px}
+.empty{color:var(--muted);font-size:14px;margin:4px 0}
+/* Home */
+.next{border:1.5px solid var(--accent);border-radius:16px;padding:14px;display:grid;gap:8px}
+.next .who{display:flex;justify-content:space-between;gap:8px;font-weight:600}
+.next .win{color:var(--accent);font-weight:700;font-size:13px}
+.more-toggle{display:flex;justify-content:space-between;align-items:center;width:100%;text-align:left;background:none;border:0;border-top:1px solid var(--line);padding:16px 0 4px;font:600 15px var(--body);color:var(--ink)}
+.more-toggle .ct{color:var(--accent)}
+.next .big{font:700 22px/1.2 var(--display);overflow-wrap:anywhere}
+.next .row .btn{flex:1;text-align:center;padding:14px 10px;font-size:16px}
+/* Schedule: a time grid like a paper day planner */
+.schedbar{display:grid;grid-template-columns:auto 1fr;gap:10px;align-items:center}
+.rangebar{display:flex;align-items:center;gap:4px}
+.rtitle{flex:1;border:0;background:none;font:700 17px var(--display);color:var(--ink);text-align:center;padding:6px}
+.rangebar .btn{min-width:40px}
+.tg-head,.tg-body{display:grid;grid-template-columns:34px repeat(var(--n),minmax(0,1fr))}
+.hday{border:0;background:none;display:grid;justify-items:center;gap:2px;padding:2px 0;color:var(--muted);font:600 12px var(--body)}
+.hday b{font:600 15px var(--body);width:30px;height:30px;border-radius:99px;display:grid;place-items:center;color:var(--ink)}
+.hday.today b{color:var(--accent)}
+.hday[aria-pressed="true"] b{background:var(--accent);color:#fff}
+.tg-body{border-top:1px solid var(--line)}
+.hours{position:relative;height:calc(var(--hh)*11)}
+.hours span{position:absolute;right:5px;transform:translateY(-50%);font-size:10px;color:var(--muted);white-space:nowrap}
+.hours span:first-child{transform:none;top:2px!important}
+.tcol{position:relative;height:calc(var(--hh)*11);border-left:1px solid var(--line);
+  background:repeating-linear-gradient(to bottom,transparent 0,transparent calc(var(--hh) - 1px),var(--line) calc(var(--hh) - 1px),var(--line) var(--hh))}
+.tcol.today{background-color:#f5fafe}
+.blk{position:absolute;border:0;border-left:3px solid var(--accent);background:var(--accent-soft);border-radius:6px;padding:3px 4px;text-align:left;display:grid;align-content:start;overflow:hidden;color:var(--ink);font:600 11px/1.25 var(--body);min-width:0}
+.blk b{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:700}
+.blk span{font-weight:500;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.blk.done{border-left-color:var(--ok);background:var(--ok-soft)}
+.blk.unpaid{border-left-color:var(--warn);background:var(--warn-soft)}
+.calhead{display:flex;align-items:center;gap:6px}
+.calhead b{flex:1;font:700 18px var(--display)}
+.calhead .btn{min-width:44px;min-height:40px}
+.cal{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px}
+.cal .dow{text-align:center;font:600 12px var(--body);color:var(--muted)}
+.day{aspect-ratio:1/1;min-height:42px;border:1px solid var(--line);background:var(--surface);border-radius:10px;display:grid;place-items:center;align-content:center;gap:3px;padding:0;color:var(--ink);font:600 15px var(--body);font-variant-numeric:tabular-nums}
+.day.past{color:var(--muted);background:var(--bg)}
+.day.today{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent)}
+.day[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.day .dots{display:flex;gap:3px;height:6px;align-items:center;font:700 10px/1 var(--body)}
+.day .dots i{width:6px;height:6px;border-radius:99px;background:var(--accent)}
+.day .dots i.done{background:var(--ok)}
+.day[aria-pressed="true"] .dots i{background:#fff}
+.job .win{font:700 13px var(--body);color:var(--accent);text-transform:uppercase;letter-spacing:.04em}
+/* Customers */
+#cust-filters{display:flex;flex-wrap:nowrap;gap:4px;justify-content:space-between}
+#cust-filters .chip{padding:7px 0;flex:1 1 auto;text-align:center;font-size:12.5px;min-width:0}
+.search{padding-left:14px;border-radius:99px;background:var(--bg);border-color:var(--bg)}
+/* full-screen forms: the quote and a customer's card */
+.overlay{position:fixed;inset:0;z-index:1000;background:#fff;overflow-y:auto;-webkit-overflow-scrolling:touch}
+.overlay>.inner{max-width:560px;margin:0 auto;display:grid;gap:18px;padding:0 max(16px,env(safe-area-inset-right,0px)) calc(28px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px))}
+.ohead{position:sticky;top:0;z-index:2;background:#fff;display:flex;align-items:center;justify-content:space-between;gap:8px;padding:calc(8px + env(safe-area-inset-top,0px)) 0 8px;border-bottom:1px solid var(--line)}
+.ohead b{font:700 18px var(--display)}
+.ohead .btn{border:0;color:var(--accent);padding:8px 4px;min-width:64px;text-align:left}
+.ohead .btn.r{text-align:right}
 /* Doors, map first */
 #view-doors{position:relative}
 .dbar{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-bottom:8px}
@@ -106,7 +182,7 @@ td:first-child,th:first-child{text-align:left}
 .dchip.due{background:var(--warn-soft);color:var(--warn);border-color:var(--warn)}
 .sdot{width:30px;height:30px;border-radius:99px;border:3px solid var(--surface);box-shadow:0 0 0 1px var(--line);background:#8a978f;margin-left:auto;padding:0}
 .sdot.ok{background:#2e9e5b} .sdot.wait{background:#e8a317} .sdot.bad{background:#c0392b}
-.dmapwrap{position:relative}
+.dmapwrap{position:relative;isolation:isolate}
 #dmap{height:60vh;border-radius:12px;border:1px solid var(--line);background:var(--bg);-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}
 .dme,.dkey{position:absolute;z-index:500;border:1px solid var(--line);background:var(--surface);color:var(--ink);font:700 15px var(--body);box-shadow:0 2px 8px rgba(0,0,0,.18)}
 .dme{right:12px;bottom:18px;width:58px;height:58px;border-radius:99px}
@@ -120,8 +196,9 @@ td:first-child,th:first-child{text-align:left}
 .sheet{position:fixed;left:0;right:0;bottom:0;z-index:1100;max-height:86vh;overflow-y:auto;background:var(--surface);border-top:1px solid var(--line);border-radius:18px 18px 0 0;box-shadow:0 -8px 30px rgba(0,0,0,.25);
   padding:14px max(16px,env(safe-area-inset-right,0px)) calc(16px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px));display:grid;gap:10px}
 .sheet>*{max-width:560px;width:100%;margin:0 auto}
+#ssheet{z-index:1150}
 .sheet-head{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
-.sheet .x{border:1px solid var(--line);background:var(--bg);color:var(--ink);border-radius:99px;width:44px;height:44px;font:700 22px/1 var(--body);flex:none}
+.sheet .x{border:0;background:var(--bg);color:var(--ink);border-radius:99px;width:44px;height:44px;font:700 22px/1 var(--body);flex:none}
 .door-addr{display:grid;gap:2px;min-width:0}
 .door-addr b{font:700 30px/1.1 var(--display);overflow-wrap:anywhere}
 .outs2{display:grid;gap:7px}
@@ -142,36 +219,21 @@ td:first-child,th:first-child{text-align:left}
 .nosync input{flex:1;min-width:0;font-size:16px;padding:10px;border-radius:10px;border:0}
 .nosync .btn{background:#fff;color:#c0392b;font-weight:800}
 .updpill{position:fixed;left:50%;transform:translateX(-50%);top:calc(10px + env(safe-area-inset-top,0px));z-index:1200;border:0;background:var(--accent);color:var(--accent-ink);border-radius:99px;padding:10px 16px;font:700 14px var(--body);box-shadow:0 4px 14px rgba(0,0,0,.25);white-space:nowrap}
-/* Schedule: month grid + the day's jobs */
-.calhead{display:flex;align-items:center;gap:6px}
-.calhead b{flex:1;font:700 18px var(--display)}
-.calhead .btn{min-width:44px;min-height:40px}
-.cal{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px}
-.cal .dow{text-align:center;font:600 12px var(--body);color:var(--muted)}
-.day{aspect-ratio:1/1;min-height:42px;border:1px solid var(--line);background:var(--surface);border-radius:10px;display:grid;place-items:center;align-content:center;gap:3px;padding:0;color:var(--ink);font:600 15px var(--body);font-variant-numeric:tabular-nums}
-.day.past{color:var(--muted);background:var(--bg)}
-.day.today{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent)}
-.day[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
-.day .dots{display:flex;gap:3px;height:6px;align-items:center;font:700 10px/1 var(--body)}
-.day .dots i{width:6px;height:6px;border-radius:99px;background:var(--accent)}
-.day .dots i.done{background:var(--ok)}
-.day[aria-pressed="true"] .dots i{background:#fff}
-.job .win{font:700 13px var(--body);color:var(--accent);text-transform:uppercase;letter-spacing:.04em}
+.pick-list .item{padding:12px 4px}
 @media (prefers-reduced-motion:no-preference){.btn,.seg button,.chip,.day{transition:background .15s}}
 </style>
 </head>
 <body>
+<header class="topbar">
+  <h1 id="screen-title">Today</h1>
+  <button id="plus-btn" class="plus" type="button" aria-label="Add new"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></button>
+</header>
 <main>
-  <div class="top">
-    <h1><span class="drop" aria-hidden="true"></span>Saddleback Shine</h1>
-    <div class="tabs" role="tablist">
-      <button id="tab-doors" role="tab" aria-selected="true">Doors</button>
-      <button id="tab-quote" role="tab" aria-selected="false">Quote</button>
-      <button id="tab-leads" role="tab" aria-selected="false">Leads <span id="due-count"></span></button>
-      <button id="tab-sched" role="tab" aria-selected="false">Schedule <span id="unsched-count"></span></button>
-    </div>
+  <div id="view-home" style="display:none;gap:22px">
+    <section><h2>Next job</h2><div id="home-next"></div></section>
+    <section id="home-jobs-sec"><h2>Today's jobs</h2><div id="home-jobs" class="list"></div></section>
+    <section><h2>Needs attention</h2><div id="home-attn" class="list"></div></section>
   </div>
-
   <div id="view-doors">
     <!-- a full map that follows you; tap or hold a house; one sheet with the answers -->
     <div class="dbar">
@@ -183,7 +245,7 @@ td:first-child,th:first-child{text-align:left}
     <div id="d-nosync" class="nosync" hidden>
       <button id="nj-open" type="button">NOT SYNCING – tap to join<small id="nj-sub">The other phone can't see your marks yet.</small></button>
       <div id="nj-box" hidden>
-        <small>Paste the team invite link (from the text, or from the other phone: Doors &gt; tap your name &gt; Invite a teammate).</small>
+        <small>Paste the team invite link (from the text, or from the other phone: More &gt; Invite a teammate).</small>
         <div class="row"><input id="nj-in" type="text" placeholder="Paste the invite link" autocomplete="off"><button class="btn small" id="nj-go" type="button">Join</button></div>
       </div>
     </div>
@@ -231,33 +293,84 @@ td:first-child,th:first-child{text-align:left}
       <div class="sheet-head"><h2>Today</h2><button class="x" type="button" data-close="tsheet" aria-label="Close">×</button></div>
       <label class="f" id="who-row">Knocker's name (it goes on every door and quote you log)<input id="who" type="text" autocomplete="off" placeholder="First name"></label>
       <div style="overflow-x:auto"><table><thead><tr><th>Knocker</th><th>Doors</th><th>No ans.</th><th>No</th><th>Has</th><th>Later</th><th>Quote</th><th>Sales</th></tr></thead><tbody id="d-today"></tbody></table></div>
-      <h2 style="margin-top:14px">Team sync</h2>
-      <p class="muted" id="sync-status"></p>
-      <div class="row"><button class="btn small primary" id="sync-now" type="button">Sync now</button><button class="btn small" id="invite" type="button" hidden>Invite a teammate</button></div>
-      <details class="mini"><summary>Join with an invite link</summary>
-        <div class="row"><input id="join-in" type="text" placeholder="Paste the invite link" autocomplete="off"><button class="btn small" id="join-go" type="button">Join</button></div></details>
-      <p class="fine">Doors, quotes and jobs save on this phone first, then go to the team's private sheet when there's signal. No answer never replaces another answer.</p>
     </div>
   </div>
 
-  <div id="view-quote" style="display:none;gap:12px">
-    <section class="card">
-      <h2><span class="num">1</span>House</h2>
+  <div id="view-sched" style="display:none;gap:12px">
+    <div class="schedbar">
+      <button class="btn small" id="cal-today" type="button">Today</button>
+      <div class="seg three" id="sched-mode" role="group" aria-label="View">
+        <button type="button" data-mode="day" aria-pressed="true">Day</button>
+        <button type="button" data-mode="3" aria-pressed="false">3 Days</button>
+        <button type="button" data-mode="week" aria-pressed="false">Week</button>
+      </div>
+    </div>
+    <div class="rangebar">
+      <button class="btn small" id="rng-prev" type="button" aria-label="Earlier">‹</button>
+      <button class="rtitle" id="rng-title" type="button" aria-label="Pick a month and day"></button>
+      <button class="btn small" id="rng-next" type="button" aria-label="Later">›</button>
+    </div>
+    <div>
+      <div id="tg-head" class="tg-head"></div>
+      <div id="tg-body" class="tg-body"></div>
+    </div>
+    <div class="row" style="justify-content:space-between"><span class="muted" id="day-title"></span><button class="btn small" id="day-rain" type="button" hidden>Rain day: move all to the next day</button></div>
+    <section><h2>Unscheduled <span id="unsched-n"></span></h2><div id="unsched-list" class="list"></div></section>
+  </div>
+
+  <div id="view-cust" style="display:none;gap:12px">
+    <input id="cust-q" class="search" type="search" placeholder="Search name, address or phone" autocomplete="off" aria-label="Search customers">
+    <div class="chips" id="cust-filters" role="group" aria-label="Filter"></div>
+    <div id="cust-list" class="list"></div>
+  </div>
+
+  <div id="view-more" style="display:none;gap:24px">
+    <section class="sec"><h2>You</h2>
+      <label class="f">Your first name (goes on every door, quote and text)<input id="s-seller" type="text" autocomplete="off"></label></section>
+    <section class="sec"><h2>Team</h2>
+      <p class="muted" id="sync-status"></p>
+      <div class="row"><button class="btn small" id="sync-now" type="button">Sync now</button><button class="btn small" id="invite" type="button" hidden>Invite a teammate</button></div>
+      <details class="mini"><summary>Join with an invite link</summary>
+        <div class="row"><input id="join-in" type="text" placeholder="Paste the invite link" autocomplete="off"><button class="btn small" id="join-go" type="button">Join</button></div></details>
+    </section>
+    <section class="sec"><h2>Your data</h2>
+      <div class="row">
+        <button class="btn small" id="backup" type="button">Back up (send a file)</button>
+        <label class="btn small filebtn" for="restore-in">Restore a backup</label>
+        <input id="restore-in" type="file" accept="application/json,.json" hidden>
+      </div>
+      <p class="muted" id="backup-note"></p>
+      <details class="mini" id="price-log"><summary>Price log: every price you've quoted</summary><div id="price-list" class="list"></div></details>
+    </section>
+    <section class="sec"><h2>Follow-up texts</h2>
+      <p class="muted">You send them by hand: the same day, day 3 and day 10 after a quote. They show up under Customers as "Text today".</p></section>
+    <section class="sec"><h2>About</h2>
+      <p class="muted">Saddleback Shine · version <span id="app-ver"></span></p></section>
+  </div>
+</main>
+
+<nav id="tabbar" class="tabbar" role="tablist">
+  <button id="tab-home" role="tab" aria-selected="true"><svg viewBox="0 0 24 24"><path d="M3 11.5 12 4l9 7.5"/><path d="M5.5 10v10h13V10"/></svg><span>Today</span></button>
+  <button id="tab-doors" role="tab" aria-selected="false"><svg viewBox="0 0 24 24"><rect x="6" y="3" width="12" height="18" rx="1.5"/><circle cx="15" cy="12.5" r=".8"/></svg><span>Doors</span></button>
+  <button id="tab-sched" role="tab" aria-selected="false"><svg viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="15.5" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg><span>Schedule</span><span class="badge" id="unsched-count"></span></button>
+  <button id="tab-cust" role="tab" aria-selected="false"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="3.8"/><path d="M4.5 20.5c0-3.8 3.4-6 7.5-6s7.5 2.2 7.5 6"/></svg><span>Customers</span><span class="badge" id="due-count"></span></button>
+  <button id="tab-more" role="tab" aria-selected="false"><svg viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></svg><span>More</span></button>
+</nav>
+
+<div id="view-quote" class="overlay" style="display:none">
+  <div class="inner">
+    <div class="ohead"><button class="btn" id="quote-back" type="button">‹ Back</button><b id="quote-title">New quote</b><button class="btn r" id="clear-quote" type="button">Start over</button></div>
+
+    <section class="sec">
+      <h2>House</h2>
       <div class="row"><input id="addr" type="text" placeholder="House number and street, city" autocomplete="off" enterkeyhint="done"><button class="btn" id="here" type="button">Here</button></div>
-      <p class="muted" id="addr-note">Tap a house on the Doors map and press Quote, or type the address.</p>
+      <p class="muted" id="addr-note"></p>
       <div class="flag ok" id="sale-note" hidden>Sale at the door: this saves as Won, ready to schedule.</div>
       <div class="flag ok" id="edit-note" hidden>Changing a saved quote. Save puts it back on the same customer.</div>
-      <div class="q"><span class="qlabel">Stories <span class="muted">(for your reference)</span></span>
-        <div class="seg three" role="group" aria-label="Stories">
-          <button data-story="1" aria-pressed="true" type="button">1 story</button>
-          <button data-story="2" aria-pressed="false" type="button">2 story</button>
-          <button data-story="3" aria-pressed="false" type="button">3 or more</button>
-        </div></div>
-      <div class="flag" id="story-flag" hidden>We only do 2 stories max.</div>
     </section>
 
-    <section class="card">
-      <h2><span class="num">2</span>What they want</h2>
+    <section class="sec">
+      <h2>What they want</h2>
       <div class="checks">
         <label><input type="checkbox" data-svc="ext"> Exterior windows</label>
         <label><input type="checkbox" data-svc="int"> Interior windows</label>
@@ -268,90 +381,85 @@ td:first-child,th:first-child{text-align:left}
       </div>
       <div class="stepper" id="panel-row" hidden><span class="qlabel">How many panels?</span>
         <div class="ctl"><button type="button" id="panel-minus" aria-label="One less panel">−</button><input id="panels" type="number" inputmode="numeric" min="0" step="1" value="0" aria-label="Panel count"><button type="button" id="panel-plus" aria-label="One more panel">+</button></div></div>
-      <div class="q"><span class="qlabel">Anything special</span>
-        <div class="chips" role="group" aria-label="Tags">
+    </section>
+
+    <section class="sec">
+      <h2>Price</h2>
+      <input id="q-price" data-opt-price="0" type="number" inputmode="decimal" min="0" step="1" autocomplete="off" placeholder="$ price" aria-label="Price">
+      <label class="f">Customer phone<input id="c-phone" type="tel" inputmode="tel" autocomplete="off"></label>
+      <label class="check"><input id="c-consent" type="checkbox"> OK to text: they said it's fine to text them about this quote</label>
+      <div class="flag" id="story-flag" hidden>We only do 2 stories max.</div>
+      <div class="quote" id="quote-card" aria-live="polite"></div>
+      <button class="btn primary block" id="send-quote" type="button">Text this quote</button>
+      <button class="btn block" id="save-only" type="button">Save</button>
+    </section>
+
+    <section class="sec">
+      <button type="button" class="more-toggle" id="more-toggle" aria-expanded="false" aria-controls="more-body"><span id="more-label">More details</span><span aria-hidden="true">▾</span></button>
+      <div id="more-body" class="sec" hidden>
+        <div class="grid2">
+          <label class="f">Customer name<input id="c-name" type="text" autocomplete="off"></label>
+          <label class="f">Email (optional)<input id="c-email" type="email" inputmode="email" autocomplete="off"></label>
+        </div>
+        <div class="seg three" role="group" aria-label="Stories">
+          <button data-story="1" aria-pressed="true" type="button">1 story</button>
+          <button data-story="2" aria-pressed="false" type="button">2 story</button>
+          <button data-story="3" aria-pressed="false" type="button">3 or more</button>
+        </div>
+        <div class="chips" role="group" aria-label="Anything special">
           <button type="button" class="chip" data-tag="french" aria-pressed="false">French panes</button>
           <button type="button" class="chip" data-tag="hard" aria-pressed="false">Hard to reach</button>
           <button type="button" class="chip" data-tag="sky" aria-pressed="false">Skylights</button>
-        </div></div>
-      <label class="f">Notes (only the team sees these)<textarea id="q-notes" rows="2" autocomplete="off"></textarea></label>
-    </section>
-
-    <section class="card">
-      <h2><span class="num">3</span>Price</h2>
-      <p class="muted">You type the price. Add up to 3 options on one quote.</p>
-      <div id="opts" class="results"></div>
-      <button class="btn small" id="opt-add" type="button">Add another option</button>
-      <div class="q"><span class="qlabel">Repeat</span>
+        </div>
+        <label class="f">Notes (only the team sees these)<textarea id="q-notes" rows="2" autocomplete="off"></textarea></label>
+        <h2>Extra options</h2>
+        <div id="opts" class="results"></div>
+        <button class="btn small" id="opt-add" type="button">Add another option</button>
+        <h2>Repeat service</h2>
         <div class="seg four" role="group" aria-label="Repeat">
           <button data-repeat="0" aria-pressed="true" type="button">One time</button>
           <button data-repeat="1" aria-pressed="false" type="button">1 month</button>
           <button data-repeat="3" aria-pressed="false" type="button">3 months</button>
           <button data-repeat="6" aria-pressed="false" type="button">6 months</button>
-        </div></div>
-      <label class="f" id="repeat-price-row" hidden>Price per repeat visit ($)<input id="repeat-price" type="number" inputmode="decimal" min="0" step="1" autocomplete="off"></label>
-    </section>
-
-    <section class="card">
-      <h2><span class="num">4</span>Customer</h2>
-      <div class="grid2">
-        <label class="f">Name<input id="c-name" type="text" autocomplete="off"></label>
-        <label class="f">Phone<input id="c-phone" type="tel" inputmode="tel" autocomplete="off"></label>
-      </div>
-      <label class="f">Email (optional)<input id="c-email" type="email" inputmode="email" autocomplete="off"></label>
-      <label class="check"><input id="c-consent" type="checkbox"> OK to text: they said it's fine to text them about this quote</label>
-      <div class="quote" id="quote-card" aria-live="polite"></div>
-      <div class="row">
-        <button class="btn primary" id="send-quote" type="button">Text this quote</button>
-        <button class="btn" id="save-only" type="button">Save</button>
+        </div>
+        <label class="f" id="repeat-price-row" hidden>Price per repeat visit ($)<input id="repeat-price" type="number" inputmode="decimal" min="0" step="1" autocomplete="off"></label>
         <button class="btn" id="pdf-btn" type="button">Quote PDF</button>
       </div>
-      <p class="muted" id="send-note">Text opens your Messages app with the quote written out. You press send. Both buttons save it to Leads.</p>
-      <div class="row"><button class="btn small" id="clear-quote" type="button">Start over</button></div>
-      <label class="f">Your first name (goes on texts and quotes)<input id="s-seller" type="text" autocomplete="off"></label>
     </section>
   </div>
+</div>
 
-  <div id="view-leads" style="display:none;gap:12px">
-    <section class="card">
-      <h2>Follow-ups due</h2>
-      <div id="leads-due" class="results"></div>
-    </section>
-    <section class="card">
-      <h2>All quotes</h2>
-      <div id="leads-all" class="results"></div>
-      <div class="row">
-        <button class="btn small primary" id="backup" type="button">Back up (send a file)</button>
-        <label class="btn small filebtn" for="restore-in">Restore a backup</label>
-        <input id="restore-in" type="file" accept="application/json,.json" hidden>
-      </div>
-      <p class="muted" id="backup-note"></p>
-      <p class="muted" id="sync-status-l"></p>
-    </section>
-    <details class="card" id="price-log">
-      <summary style="cursor:pointer;font:700 15px var(--display)">Price log: every price you've quoted</summary>
-      <div id="price-list" class="results"></div>
-    </details>
+<div id="view-card" class="overlay" style="display:none">
+  <div class="inner">
+    <div class="ohead"><button class="btn" id="card-back" type="button">‹ Back</button><b>Customer</b><span style="min-width:64px"></span></div>
+    <div id="card-body"></div>
   </div>
+</div>
 
-  <div id="view-sched" style="display:none;gap:12px">
-    <section class="card">
-      <div class="calhead"><button class="btn small" id="cal-prev" type="button" aria-label="Previous month">‹</button><b id="cal-title"></b><button class="btn small" id="cal-today" type="button">Today</button><button class="btn small" id="cal-next" type="button" aria-label="Next month">›</button></div>
-      <div class="cal" aria-hidden="true"><span class="dow">S</span><span class="dow">M</span><span class="dow">T</span><span class="dow">W</span><span class="dow">T</span><span class="dow">F</span><span class="dow">S</span></div>
-      <div class="cal" id="cal-grid"></div>
-    </section>
-    <section class="card">
-      <h2 id="day-title"></h2>
-      <div id="day-list" class="results"></div>
-      <button class="btn small" id="day-rain" type="button" hidden>Rain day: move all to the next day</button>
-    </section>
-    <section class="card">
-      <h2>Unscheduled <span id="unsched-n"></span></h2>
-      <div id="unsched-list" class="results"></div>
-      <p class="muted" id="sync-status-d"></p>
-    </section>
+<div id="psheet" class="sheet" hidden>
+  <div class="sheet-head"><h2>Add</h2><button class="x" type="button" id="p-close" aria-label="Close">×</button></div>
+  <div class="outs2">
+    <button type="button" id="p-quote" style="--c:#0877c9"><i></i>New quote</button>
+    <button type="button" id="p-job" style="--c:#0877c9"><i></i>New job (schedule a customer)</button>
   </div>
+</div>
 
+<div id="pjsheet" class="sheet" hidden>
+  <div class="sheet-head"><h2>Schedule which customer?</h2><button class="x" type="button" id="pj-close" aria-label="Close">×</button></div>
+  <div id="pj-list" class="list pick-list"></div>
+</div>
+
+<div id="msheet" class="sheet" hidden>
+  <div class="sheet-head"><h2>Pick a day</h2><button class="x" type="button" id="m-close" aria-label="Close">×</button></div>
+  <div class="calhead"><button class="btn small" id="cal-prev" type="button" aria-label="Previous month">‹</button><b id="cal-title"></b><button class="btn small" id="cal-next" type="button" aria-label="Next month">›</button></div>
+  <div class="cal" aria-hidden="true"><span class="dow">S</span><span class="dow">M</span><span class="dow">T</span><span class="dow">W</span><span class="dow">T</span><span class="dow">F</span><span class="dow">S</span></div>
+  <div class="cal" id="cal-grid"></div>
+</div>
+
+<div id="jsheet" class="sheet" hidden>
+  <div class="sheet-head"><span class="muted" id="j-day"></span><button class="x" type="button" id="j-close" aria-label="Close">×</button></div>
+  <div id="j-body"></div>
+</div>
   <div id="ssheet" class="sheet" hidden>
     <div class="sheet-head"><div class="door-addr"><b id="s-addr"></b><span class="muted" id="s-sub"></span></div><button id="s-close" class="x" type="button" aria-label="Close">×</button></div>
     <div class="q"><span class="qlabel">Day</span>
@@ -362,7 +470,7 @@ td:first-child,th:first-child{text-align:left}
     <label class="f">Assigned to (optional)<input id="s-who" type="text" autocomplete="off" placeholder="Name"></label>
     <div class="row"><button class="btn primary" id="s-save" type="button">Save to the schedule</button><button class="btn" id="s-unsched" type="button" hidden>Take off the schedule</button></div>
   </div>
-</main>
+
 <button id="upd" class="updpill" type="button" hidden>New version ready · tap to refresh</button>
 <script>
 "use strict";
@@ -437,7 +545,7 @@ const SVC = [["ext","Exterior windows"], ["int","Interior windows"], ["screens",
 const TAGS = [["french","French panes"], ["hard","Hard to reach"], ["sky","Skylights"]];
 const REPEAT_WORDS = {1:"every month", 3:"every 3 months", 6:"every 6 months"};
 const MAX_OPTIONS = 3;
-const blankQuote = () => ({address:"", lat:null, lon:null, story:1, svc:{}, panels:0, tags:{}, options:[{label:"", price:""}], def:0, repeat:0, repeatPrice:"", fromSale:false, editId:null});
+const blankQuote = () => ({address:"", lat:null, lon:null, story:1, svc:{}, panels:0, tags:{}, options:[{label:"", price:""}], def:0, repeat:0, repeatPrice:"", fromSale:false, editId:null, more:false});
 let st = blankQuote();
 
 function svcText(q){
@@ -483,32 +591,43 @@ function renderOpts(){
   const many = st.options.length > 1;
   st.options.forEach((o, i) => {
     const row = el("div", "opt"), head = el("div", "opt-head");
-    head.append(el("b", "", many ? "Option " + (i + 1) : "Price"));
+    head.append(el("b", "", many ? "Option " + (i + 1) : "What the price covers"));
     if (many){
       const d = el("button", "chip mini", st.def === i ? "Default ✓" : "Make default"); d.type = "button"; d.setAttribute("aria-pressed", st.def === i);
       d.onclick = () => { st.def = i; renderOpts(); preview(); };
       const x = el("button", "chip mini", "Remove"); x.type = "button";
-      x.onclick = () => { st.options.splice(i, 1); st.def = st.def === i ? 0 : st.def > i ? st.def - 1 : st.def; renderOpts(); preview(); };
+      x.onclick = () => { st.options.splice(i, 1); st.def = st.def === i ? 0 : st.def > i ? st.def - 1 : st.def; $("q-price").value = st.options[0].price; renderOpts(); preview(); };
       head.append(d, x);
     }
-    const grid = el("div", "optgrid");
+    const grid = el("div", "optgrid"); if (i === 0) grid.style.gridTemplateColumns = "1fr";
     const lab = el("input"); lab.type = "text"; lab.autocomplete = "off"; lab.placeholder = many ? "What this option covers" : "What it covers (optional)"; lab.value = o.label;
     lab.setAttribute("aria-label", "Option " + (i + 1) + " label"); lab.dataset.optLabel = i;
     lab.oninput = () => { o.label = lab.value; preview(); };
-    const pr = el("input"); pr.type = "number"; pr.inputMode = "decimal"; pr.min = "0"; pr.step = "1"; pr.autocomplete = "off"; pr.placeholder = "$ price"; pr.value = o.price;
-    pr.setAttribute("aria-label", "Option " + (i + 1) + " price"); pr.dataset.optPrice = i;
-    pr.oninput = () => { o.price = pr.value; preview(); };
-    grid.append(lab, pr); row.append(head, grid); box.append(row);
+    grid.append(lab);
+    if (i > 0){   // option 1's price is the one typed price on the main form
+      const pr = el("input"); pr.type = "number"; pr.inputMode = "decimal"; pr.min = "0"; pr.step = "1"; pr.autocomplete = "off"; pr.placeholder = "$ price"; pr.value = o.price;
+      pr.setAttribute("aria-label", "Option " + (i + 1) + " price"); pr.dataset.optPrice = i;
+      pr.oninput = () => { o.price = pr.value; preview(); };
+      grid.append(pr);
+    }
+    row.append(head, grid); box.append(row);
   });
   $("opt-add").hidden = st.options.length >= MAX_OPTIONS;
 }
+$("q-price").addEventListener("input", () => { st.options[0].price = $("q-price").value; preview(); });
+$("more-toggle").onclick = () => { st.more = !st.more; preview(); };
 $("opt-add").onclick = () => { if (st.options.length < MAX_OPTIONS){ st.options.push({label:"", price:""}); renderOpts(); preview(); } };
+// how many "More details" fields already hold something (shown on the fold so nothing hides)
+const moreCount = f => [f.name, f.email, st.story !== 1, f.quote.tags.length, f.quote.notes, st.options.length > 1 || st.options[0].label.trim(), st.repeat].filter(Boolean).length;
 function preview(){
   $("panel-row").hidden = !st.svc.solar;
   $("story-flag").hidden = st.story !== 3;
   $("repeat-price-row").hidden = !st.repeat;
   $("sale-note").hidden = !st.fromSale; $("edit-note").hidden = !st.editId;
+  $("quote-title").textContent = st.editId ? "Change quote" : "New quote";
   const f = formLead();
+  $("more-body").hidden = !st.more; $("more-toggle").setAttribute("aria-expanded", st.more);
+  const n = moreCount(f); $("more-label").textContent = "More details" + (n ? " · " + n : "");
   $("quote-card").textContent = st.story === 3 ? "We only do 2 stories max."
     : (f.quote.svc.length || f.quote.options.length) ? quoteText(f) : "The quote shows here as you fill it in.";
 }
@@ -519,8 +638,8 @@ function paintQuote(){
   $("panels").value = st.panels;
   document.querySelectorAll("[data-tag]").forEach(b => b.setAttribute("aria-pressed", !!st.tags[b.dataset.tag]));
   document.querySelectorAll("[data-repeat]").forEach(b => b.setAttribute("aria-pressed", +b.dataset.repeat === st.repeat));
-  $("repeat-price").value = st.repeatPrice;
-  $("addr-note").textContent = st.lat != null ? "House picked on the map." : "Tap a house on the Doors map and press Quote, or type the address.";
+  $("repeat-price").value = st.repeatPrice; $("q-price").value = st.options[0].price;
+  $("addr-note").textContent = st.lat != null ? "House picked on the map." : "";
   renderOpts(); preview();
 }
 // A new house always starts a clean quote: nothing from the last house carries over.
@@ -530,7 +649,7 @@ function resetQuote(){
   $("c-consent").checked = false;
   paintQuote();
 }
-$("addr").addEventListener("input", () => { st.address = $("addr").value; st.lat = st.lon = null; $("addr-note").textContent = "Tap a house on the Doors map and press Quote, or type the address."; preview(); });
+$("addr").addEventListener("input", () => { st.address = $("addr").value; st.lat = st.lon = null; $("addr-note").textContent = ""; preview(); });
 document.querySelectorAll("[data-story]").forEach(b => b.onclick = () => { st.story = +b.dataset.story; paintQuote(); });
 document.querySelectorAll("[data-svc]").forEach(c => c.addEventListener("change", () => { st.svc[c.dataset.svc] = c.checked; preview(); }));
 document.querySelectorAll("[data-tag]").forEach(b => b.onclick = () => { st.tags[b.dataset.tag] = !st.tags[b.dataset.tag]; b.setAttribute("aria-pressed", !!st.tags[b.dataset.tag]); preview(); });
@@ -541,7 +660,11 @@ $("panel-minus").onclick = () => setPanels(st.panels - 1);
 $("panel-plus").onclick = () => setPanels(st.panels + 1);
 $("panels").addEventListener("change", () => setPanels(parseFloat($("panels").value)));
 for (const id of ["q-notes", "c-name", "c-phone", "c-email"]) $(id).addEventListener("input", preview);
-$("clear-quote").onclick = () => { resetQuote(); toast("Cleared"); };
+$("clear-quote").onclick = () => { resetQuote(); $("view-quote").scrollTop = 0; toast("Cleared"); };
+// the quote opens full-screen (from +, a door's Quote or Sale, or a customer's card); Back keeps what you typed
+function openQuote(){ $("view-quote").style.display = "block"; $("view-quote").scrollTop = 0; }
+function closeQuote(){ $("view-quote").style.display = "none"; }
+$("quote-back").onclick = closeQuote;
 // "Here": the nearest house address to where you're standing
 $("here").onclick = () => {
   if (!navigator.geolocation){ toast("Location isn't available here"); return; }
@@ -673,11 +796,11 @@ function saveLead(sent){
 $("send-quote").onclick = () => {
   const l = saveLead(true); if (!l) return;
   const url = smsLink(l.phone, quoteText(l));
-  resetQuote(); toast("Saved. Messages should open now"); openSms(url);
+  resetQuote(); closeQuote(); toast("Saved. Messages should open now"); openSms(url);
 };
 $("save-only").onclick = () => {
   const sale = st.fromSale, l = saveLead(false); if (!l) return;
-  resetQuote();
+  resetQuote(); closeQuote();
   if (sale && l.status === "won"){ showTab("sched"); openSchedule(l.id); toast("Saved as Won. Pick the day"); }
   else toast("Quote saved");
 };
@@ -695,22 +818,27 @@ function statusPill(l){
   if (l.status === "done") return el("span", "pill " + (l.paid ? "paid" : "due"), l.paid ? "Done · paid" : "Done · unpaid");
   return el("span", "pill " + (l.status === "won" || l.status === "scheduled" ? "won" : ""), STATUS[l.status] || l.status || "");
 }
-function leadCard(l, showDue){
-  const d = nextDue(l), c = el("div", "lead"), who = el("div", "who");
+// ---------- customers: one searchable list; a customer's card has everything that was on a lead ----------
+const isDue = l => { const d = nextDue(l), now = new Date(); now.setHours(23, 59, 59); return !!(d && d <= now && (!l.seller || !S.seller || l.seller === S.seller)); };   // only your own customers: a teammate's lead is theirs to text (no double texts)
+function leadCard(l){
+  const d = nextDue(l), c = el("div", "lead solo"), who = el("div", "who");
   c.dataset.lead = l.id;
-  who.append(el("span", "", (l.name || "No name") + " · " + money(leadPrice(l))), showDue ? el("span", "pill due", "Text today") : statusPill(l));
-  c.append(who);
-  c.append(el("div", "muted", [l.address, l.phone, new Date(l.created).toLocaleDateString("en-US", {month:"short", day:"numeric"}), team() && l.seller ? "by " + l.seller : ""].filter(Boolean).join(" · ")));
+  c.append(el("div", "big", l.name || l.address || "No name"));
+  who.append(el("span", "", money(leadPrice(l))), statusPill(l)); c.append(who);
+  c.append(el("div", "muted", [l.name ? l.address : "", l.phone, new Date(l.created).toLocaleDateString("en-US", {month:"short", day:"numeric"}), team() && l.seller ? "by " + l.seller : ""].filter(Boolean).join(" · ")));
   const q = l.quote || {}, os = q.options || [];
   c.append(el("div", "muted", [svcText(q), os.length > 1 ? os.map(o => money(o.price)).join(" / ") : "", q.repeat && q.repeatPrice ? `repeat ${REPEAT_WORDS[q.repeat]} ${money(q.repeatPrice)}` : ""].filter(Boolean).join(" · ")));
   if (l.job && l.job.date) c.append(el("div", "muted", "Job: " + dayLabel(l.job.date) + " · " + winLabel(l.job.win) + (l.job.who ? " · " + l.job.who : "")));
-  if (!showDue && d) c.append(el("div", "muted", "Next follow-up " + d.toLocaleDateString("en-US", {month:"short", day:"numeric"})));
+  if (d) c.append(el("div", "muted", "Next follow-up " + d.toLocaleDateString("en-US", {month:"short", day:"numeric"})));
   const row = el("div", "row");
-  if (showDue){
+  if (isDue(l)){
     const a = link("Send follow-up " + ((l.touches || 0) + 1), "primary", smsLink(l.phone, FOLLOW[l.touches || 0].text(l)));
     a.onclick = () => { setTimeout(() => mutate(l.id, x => { x.touches = (x.touches || 0) + 1; }), 400); };
     row.append(a);
   }
+  if (l.status === "won") row.append(btn("Schedule", "primary", () => openSchedule(l.id)));
+  if (l.status === "scheduled") row.append(btn("Reschedule", "", () => openSchedule(l.id)));
+  if (l.status === "done") row.append(paidButton(l));
   const sel = el("select"); sel.setAttribute("aria-label", "Status"); sel.style.width = "auto";
   for (const v in STATUS) sel.add(new Option(STATUS[v], v, false, l.status === v));
   sel.onchange = () => {
@@ -719,30 +847,89 @@ function leadCard(l, showDue){
     mutate(l.id, x => setStatus(x, v));
   };
   row.append(sel);
-  if (l.status === "won") row.append(btn("Schedule", "primary", () => openSchedule(l.id)));
-  if (l.status === "scheduled") row.append(btn("Reschedule", "", () => openSchedule(l.id)));
-  if (l.status === "done") row.append(paidButton(l));
   c.append(row);
-  const more = el("details", "mini"), mrow = el("div", "row");
-  more.append(el("summary", "", "More"));
+  const mrow = el("div", "row");
   mrow.append(btn("Change the quote", "", () => editLead(l.id)), btn("PDF", "", () => sharePdf(l)));
-  if (l.phone && l.consent) mrow.append(link("Text the quote", "", smsLink(l.phone, quoteText(l))));
+  if (l.phone && l.consent) mrow.append(link("Text the quote", l.status === "quoted" && !isDue(l) ? "primary" : "", smsLink(l.phone, quoteText(l))));
   if (l.consent) mrow.append(btn("Do not text", "", () => { mutate(l.id, x => { x.consent = false; x.noText = true; }); toast("No more texts to " + (l.name || "this customer")); }));
   else if (l.noText) mrow.append(el("span", "pill", "Do not text"));
-  more.append(mrow); c.append(more);
+  c.append(mrow);
   return c;
 }
+const CF = [["all","All"], ["quoted","Quoted"], ["won","Won"], ["scheduled","Scheduled"], ["done","Done"], ["unpaid","Unpaid"]];
+let custFilter = "all", openCust = null;
+const matchFilter = (l, f) => f === "all" || (f === "unpaid" ? l.status === "done" && !l.paid : l.status === f);
+function renderCust(){
+  const all = leads(), q = $("cust-q").value.trim().toLowerCase(), qd = q.replace(/\D/g, "");
+  const fb = $("cust-filters"); fb.textContent = "";
+  for (const [k, label] of CF){
+    const b = el("button", "chip mini", label); b.type = "button"; b.dataset.cf = k; b.setAttribute("aria-pressed", custFilter === k);
+    b.onclick = () => { custFilter = k; renderCust(); }; fb.append(b);
+  }
+  const list = all.filter(l => matchFilter(l, custFilter) && (!q || [l.name, l.address, l.email].some(v => (v || "").toLowerCase().includes(q)) || (qd && (l.phone || "").replace(/\D/g, "").includes(qd))));
+  const box = $("cust-list"); box.textContent = "";
+  if (!list.length) box.append(el("p", "empty", all.length ? "Nobody matches." : "Saved quotes show up here."));
+  for (const l of list){
+    const b = el("button", "item"); b.type = "button"; b.dataset.cust = l.id;
+    const g = el("div", "grow"), end = el("div", "end");
+    g.append(el("b", "", l.name || l.address || "No name"), el("span", "", [l.name ? l.address : "", team() && l.seller ? "by " + l.seller : ""].filter(Boolean).join(" · ") || " "));
+    end.append(el("span", "", money(leadPrice(l))), statusPill(l));
+    if (isDue(l)) end.append(el("span", "pill due", "Text today"));
+    b.append(g, end); b.onclick = () => openCard(l.id); box.append(b);
+  }
+}
+$("cust-q").addEventListener("input", renderCust);
+function openCard(id){ openCust = id; paintCard(); $("view-card").scrollTop = 0; }
+function closeCard(){ openCust = null; $("view-card").style.display = "none"; }
+function paintCard(){
+  if (!openCust) return;
+  const l = leads().find(x => x.id === openCust); if (!l){ closeCard(); return; }
+  const body = $("card-body"); body.textContent = ""; body.append(leadCard(l)); $("view-card").style.display = "block";
+}
+$("card-back").onclick = closeCard;
 function renderLeads(){
-  const all = leads(), now = new Date(); now.setHours(23, 59, 59);
-  // only your own customers: a teammate's lead is theirs to text (no double texts)
-  const due = all.filter(l => { const d = nextDue(l); return d && d <= now && (!l.seller || !S.seller || l.seller === S.seller); });
-  $("due-count").textContent = due.length ? `(${due.length})` : "";
-  const dueBox = $("leads-due"); dueBox.textContent = "";
-  if (!due.length) dueBox.append(el("p", "muted", "Nobody to text today."));
-  due.forEach(l => dueBox.appendChild(leadCard(l, true)));
-  const allBox = $("leads-all"); allBox.textContent = "";
-  if (!all.length) allBox.append(el("p", "muted", "Saved quotes show up here."));
-  all.forEach(l => allBox.appendChild(leadCard(l, false)));
+  const due = leads().filter(isDue);
+  $("due-count").textContent = due.length ? String(due.length) : "";
+  renderCust(); paintCard(); renderHome();
+}
+// ---------- Today: the next job, the rest of today's jobs, what needs you ----------
+function attnRow(key, title, sub, fn){
+  const b = el("button", "item"), g = el("div", "grow"); b.type = "button"; b.dataset.attn = key;
+  g.append(el("b", "", title), el("span", "", sub)); b.append(g, el("span", "chev", "›")); b.onclick = fn; return b;
+}
+function renderHome(){
+  const ds = Object.values(doorsAll()), all = leads(), js = dayJobs(today());
+  const nx = js.find(l => l.status !== "done"), nb = $("home-next"); nb.textContent = "";
+  if (!nx) nb.append(el("p", "empty", "No more jobs today."));
+  else {
+    const c = el("div", "next"), who = el("div", "who"); c.dataset.next = nx.id;
+    who.append(el("span", "win", winLabel(nx.job.win)), el("span", "", money(leadPrice(nx))));
+    c.append(who, el("div", "big", nx.name || nx.address || "No name"));
+    if (nx.name && nx.address) c.append(el("div", "", nx.address));
+    c.append(el("div", "muted", svcText(nx.quote) || " "));
+    const row = el("div", "row"), nav = link("Navigate", "primary", navUrl(nx)); nav.target = "_blank"; nav.rel = "noopener"; nav.dataset.act = "nav"; row.append(nav);
+    if (nx.phone){ const a = link("Call", "", "tel:" + nx.phone.replace(/[^\d+]/g, "")); a.dataset.act = "call"; row.append(a); }
+    const dn = btn("Done", "good", () => { mutate(nx.id, x => setStatus(x, "done")); toast("Done: " + (nx.address || "job")); }); dn.dataset.act = "done"; row.append(dn);
+    c.append(row); nb.append(c);
+  }
+  const jb = $("home-jobs"); jb.textContent = "";
+  const rest = js.filter(l => !nx || l.id !== nx.id);
+  $("home-jobs-sec").hidden = !rest.length;
+  for (const l of rest){
+    const b = el("button", "item"), g = el("div", "grow"), end = el("div", "end"); b.type = "button"; b.dataset.hjob = l.id;
+    g.append(el("b", "", l.name || l.address || "No name"), el("span", "", [l.address, svcText(l.quote)].filter(Boolean).join(" · ")));
+    end.append(el("span", "", money(leadPrice(l))), el("span", "win", l.status === "done" ? "Done" : winLabel(l.job.win)));
+    b.append(g, end); b.onclick = () => openJob(l.id); jb.append(b);
+  }
+  const now = Date.now(), ab = $("home-attn"); ab.textContent = "";
+  const cbDue = ds.filter(d => d.outcome === "later" && d.due && d.due <= now).length;
+  const quoted = all.filter(l => l.status === "quoted").length, won = all.filter(l => l.status === "won").length, unpaid = all.filter(l => l.status === "done" && !l.paid).length;
+  const plural = (n, w) => n + " " + w + (n === 1 ? "" : "s");
+  if (cbDue) ab.append(attnRow("comeback", plural(cbDue, "come-back") + " due", "Doors to try again", () => { showTab("doors"); openSheet("cbsheet"); }));
+  if (quoted) ab.append(attnRow("quotes", plural(quoted, "quote") + " waiting", all.filter(isDue).length ? all.filter(isDue).length + " to text today" : "Not answered yet", () => { custFilter = "quoted"; $("cust-q").value = ""; showTab("cust"); }));
+  if (won) ab.append(attnRow("unsched", (won === 1 ? "1 won job needs" : won + " won jobs need") + " a day", "Pick a day on the Schedule", () => showTab("sched")));
+  if (unpaid) ab.append(attnRow("unpaid", plural(unpaid, "unpaid job"), "Done, waiting on payment", () => { custFilter = "unpaid"; $("cust-q").value = ""; showTab("cust"); }));
+  if (!ab.children.length) ab.append(el("p", "empty", "Nothing needs you right now."));
 }
 function renderPrices(){
   const box = $("price-list"), log = priceLog(); box.textContent = "";
@@ -767,7 +954,7 @@ function editLead(id){
     options: (q.options || []).length ? q.options.map(o => ({label: o.label || "", price: String(o.price)})) : [{label:"", price:""}],
     def: q.def || 0, repeat: q.repeat || 0, repeatPrice: q.repeatPrice ? String(q.repeatPrice) : "", editId: l.id});
   $("q-notes").value = q.notes || ""; $("c-name").value = l.name || ""; $("c-phone").value = l.phone || ""; $("c-email").value = l.email || ""; $("c-consent").checked = !!l.consent;
-  showTab("quote"); paintQuote(); window.scrollTo({top:0});
+  closeCard(); paintQuote(); openQuote();
 }
 // Back up everything on this phone (quotes, jobs, the price log) as one file through the share sheet.
 $("backup").onclick = async () => {
@@ -797,9 +984,11 @@ function showBackupNote(){
   $("backup-note").textContent = last ? "Last backup: " + new Date(last).toLocaleString("en-US", {month:"short", day:"numeric", hour:"numeric", minute:"2-digit"}) + "." : "Not backed up yet.";
 }
 
-// ---------- schedule: a month grid, the day's jobs, and the Won jobs with no day yet ----------
+// ---------- schedule: a time grid (hours down the side), a month picker, and the Won jobs with no day yet ----------
 // A job is a Won customer with a day and a time window. It lives on the lead, so it syncs the way leads do.
 const WINS = [["8-10","8–10 AM"], ["10-12","10 AM–12 PM"], ["12-2","12–2 PM"], ["2-4","2–4 PM"]];
+const WIN_HOURS = {"8-10":[8, 10], "10-12":[10, 12], "12-2":[12, 14], "2-4":[14, 16]};
+const GRID_FROM = 7, GRID_TO = 18, HOUR_PX = 44;   // 7 AM to 6 PM
 const winLabel = k => (WINS.find(w => w[0] === k) || ["", k || "Any time"])[1];
 const winOrder = k => { const i = WINS.findIndex(w => w[0] === k); return i < 0 ? 99 : i; };
 const ymd = d => d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
@@ -809,8 +998,12 @@ const today = () => ymd(new Date());
 const dayLabel = s => fromYmd(s).toLocaleDateString("en-US", {weekday:"short", month:"short", day:"numeric"});
 const onCalendar = l => !!(l.job && l.job.date && (l.status === "scheduled" || l.status === "done"));
 const dayJobs = day => leads().filter(l => onCalendar(l) && l.job.date === day).sort((a, b) => winOrder(a.job.win) - winOrder(b.job.win) || (a.address || "").localeCompare(b.address || ""));
-const cal = {y: new Date().getFullYear(), m: new Date().getMonth(), sel: today()};
-function renderCal(){
+// cal.sel is the picked day; cal.start is the first day on screen (Day: the day; 3 Days: it and the next 2; Week: Sunday to Saturday)
+const cal = {y: new Date().getFullYear(), m: new Date().getMonth(), sel: today(), start: today(), mode: "day"};
+const modeDays = () => cal.mode === "day" ? 1 : cal.mode === "3" ? 3 : 7;
+const startFor = s => cal.mode === "week" ? addDays(s, -fromYmd(s).getDay()) : s;
+function goDay(day){ cal.sel = day; cal.start = startFor(day); const d = fromYmd(day); cal.y = d.getFullYear(); cal.m = d.getMonth(); }
+function renderCal(){   // the month picker
   const first = new Date(cal.y, cal.m, 1), n = new Date(cal.y, cal.m + 1, 0).getDate(), t = today(), counts = {};
   for (const l of leads()) if (onCalendar(l)) (counts[l.job.date] = counts[l.job.date] || []).push(l.status === "done");
   $("cal-title").textContent = first.toLocaleDateString("en-US", {month:"long", year:"numeric"});
@@ -826,24 +1019,64 @@ function renderCal(){
     if (js.length > 3) dots.textContent = String(js.length);
     else js.sort().forEach(done => dots.append(el("i", done ? "done" : "")));
     b.append(dots);
-    b.onclick = () => { cal.sel = key; renderCal(); renderDay(); };
+    b.onclick = () => { goDay(key); $("msheet").hidden = true; renderSched(); };
     g.append(b);
+  }
+}
+$("rng-title").onclick = () => { const d = fromYmd(cal.sel); cal.y = d.getFullYear(); cal.m = d.getMonth(); renderCal(); $("msheet").hidden = false; };
+$("m-close").onclick = () => { $("msheet").hidden = true; };
+function renderGrid(){
+  const n = modeDays(), days = Array.from({length: n}, (_, i) => addDays(cal.start, i)), t = today();
+  document.querySelectorAll("[data-mode]").forEach(b => b.setAttribute("aria-pressed", b.dataset.mode === cal.mode));
+  const a = fromYmd(days[0]), z = fromYmd(days[n - 1]), md = d => d.toLocaleDateString("en-US", {month:"short", day:"numeric"});
+  $("rng-title").textContent = (n === 1 ? dayLabel(days[0]) : md(a) + " – " + (a.getMonth() === z.getMonth() ? z.getDate() : md(z))) + " ▾";
+  const head = $("tg-head"), body = $("tg-body"); head.textContent = ""; body.textContent = "";
+  head.style.setProperty("--n", n); body.style.setProperty("--n", n);
+  head.append(el("span"));
+  for (const day of days){
+    const d = fromYmd(day), b = el("button", "hday" + (day === t ? " today" : "")); b.type = "button"; b.dataset.hday = day;
+    b.setAttribute("aria-pressed", day === cal.sel); b.setAttribute("aria-label", dayLabel(day));
+    b.append(el("span", "", d.toLocaleDateString("en-US", {weekday:"short"})), el("b", "", String(d.getDate())));
+    b.onclick = () => { cal.sel = day; renderSched(); };
+    head.append(b);
+  }
+  const hours = el("div", "hours");
+  for (let h = GRID_FROM; h < GRID_TO; h++){ const s = el("span", "", (h % 12 || 12) + (h < 12 ? " AM" : " PM")); s.style.top = (h - GRID_FROM) * HOUR_PX + "px"; hours.append(s); }
+  body.append(hours);
+  for (const day of days){
+    const col = el("div", "tcol" + (day === t ? " today" : "")); col.dataset.col = day;
+    const byWin = {};
+    for (const l of dayJobs(day)) (byWin[l.job.win] = byWin[l.job.win] || []).push(l);
+    for (const w in byWin){
+      const [s, e] = WIN_HOURS[w] || WIN_HOURS["8-10"], g = byWin[w];
+      g.forEach((l, i) => {
+        const b = el("button", "blk" + (l.status === "done" ? (l.paid ? " done" : " done unpaid") : "")); b.type = "button";
+        b.dataset.block = l.id; b.dataset.win = w;
+        b.style.top = ((s - GRID_FROM) * HOUR_PX + 1) + "px"; b.style.height = ((e - s) * HOUR_PX - 2) + "px";
+        b.style.left = `calc(${i * 100 / g.length}% + 1px)`; b.style.width = `calc(${100 / g.length}% - 2px)`;
+        b.setAttribute("aria-label", (l.name || l.address || "Job") + ", " + winLabel(w) + ", " + money(leadPrice(l)));
+        b.append(el("b", "", l.name || l.address || "Job"), el("span", "", money(leadPrice(l))));
+        b.onclick = () => openJob(l.id);
+        col.append(b);
+      });
+    }
+    body.append(col);
   }
 }
 let rainArm = null, moveOpen = null;
 function jobCard(l){
-  const done = l.status === "done", c = el("div", "lead job" + (done ? " done" : "")), who = el("div", "who");
+  const done = l.status === "done", c = el("div", "lead solo job"), who = el("div", "who");
   c.dataset.job = l.id;
   who.append(el("span", "win", winLabel(l.job.win)), statusPill(l));
   c.append(who, el("div", "big", l.address || "No address"), el("div", "", [svcText(l.quote), money(leadPrice(l))].filter(Boolean).join(" · ")));
   c.append(el("div", "muted", [l.name || "No name", detailText(l.quote), l.job.who ? "Assigned to " + l.job.who : ""].filter(Boolean).join(" · ")));
   if (l.quote && l.quote.notes) c.append(el("div", "muted", "Notes: " + l.quote.notes));
-  const row = el("div", "row"), nav = link("Navigate", "primary", navUrl(l)); nav.target = "_blank"; nav.rel = "noopener";
+  const row = el("div", "row"), nav = link("Navigate", "", navUrl(l)); nav.target = "_blank"; nav.rel = "noopener";
   row.append(nav);
   if (l.phone) row.append(link("Call", "", "tel:" + l.phone.replace(/[^\d+]/g, "")));
   if (!done){
     row.append(btn("Done", "good", () => { mutate(l.id, x => setStatus(x, "done")); toast("Done: " + (l.address || "job")); }));
-    row.append(btn("Reschedule", "", () => { moveOpen = moveOpen === l.id ? null : l.id; renderDay(); }));
+    row.append(btn("Reschedule", "", () => { moveOpen = moveOpen === l.id ? null : l.id; renderSched(); }));
   } else {
     row.append(paidButton(l), btn("Not done", "", () => mutate(l.id, x => setStatus(x, "scheduled"))));
   }
@@ -860,6 +1093,18 @@ function jobCard(l){
   }
   return c;
 }
+// tap a block on the grid: the job card (address, services, notes, Navigate, Call, Done, Paid, Reschedule)
+let openJobId = null;
+function openJob(id){ openJobId = id; moveOpen = null; paintJob(); }
+function closeJob(){ openJobId = null; moveOpen = null; $("jsheet").hidden = true; }
+function paintJob(){
+  if (!openJobId) return;
+  const l = leads().find(x => x.id === openJobId);
+  if (!l || !onCalendar(l)){ closeJob(); return; }
+  $("j-day").textContent = dayLabel(l.job.date);
+  const b = $("j-body"); b.textContent = ""; b.append(jobCard(l)); $("jsheet").hidden = false;
+}
+$("j-close").onclick = closeJob;
 function moveJob(id, to){
   moveOpen = null;
   mutate(id, x => { x.job = Object.assign({}, x.job, {date: to}); x.jobAt = Date.now(); });
@@ -869,12 +1114,9 @@ function navUrl(l){
   const dest = l.lat != null && l.lon != null ? l.lat + "," + l.lon : (l.address || "");
   return isIOS ? "https://maps.apple.com/?dirflg=d&daddr=" + encodeURIComponent(dest) : "https://www.google.com/maps/dir/?api=1&destination=" + encodeURIComponent(dest);
 }
-function renderDay(){
+function renderDayInfo(){
   const list = dayJobs(cal.sel), open = list.filter(l => l.status === "scheduled");
   $("day-title").textContent = (cal.sel === today() ? "Today · " : "") + dayLabel(cal.sel) + " · " + (list.length ? `${list.length} job${list.length === 1 ? "" : "s"}` : "no jobs");
-  const box = $("day-list"); box.textContent = "";
-  if (!list.length) box.append(el("p", "muted", "Nothing on this day. Schedule a Won job from the list below."));
-  list.forEach(l => box.append(jobCard(l)));
   const armed = rainArm && rainArm.day === cal.sel && Date.now() - rainArm.at < 5000;
   $("day-rain").hidden = open.length < 1;
   $("day-rain").textContent = armed ? `Tap again: move ${open.length} job${open.length === 1 ? "" : "s"} to ${dayLabel(addDays(cal.sel, 1))}` : "Rain day: move all to the next day";
@@ -882,8 +1124,8 @@ function renderDay(){
 $("day-rain").onclick = () => {
   const day = cal.sel, ids = new Set(dayJobs(day).filter(l => l.status === "scheduled").map(l => l.id)); if (!ids.size) return;
   if (!(rainArm && rainArm.day === day && Date.now() - rainArm.at < 5000)){
-    rainArm = {day, at: Date.now()}; renderDay();
-    setTimeout(() => { if (rainArm && Date.now() - rainArm.at >= 5000){ rainArm = null; renderDay(); } }, 5100);
+    rainArm = {day, at: Date.now()}; renderSched();
+    setTimeout(() => { if (rainArm && Date.now() - rainArm.at >= 5000){ rainArm = null; renderSched(); } }, 5100);
     return;
   }
   rainArm = null;
@@ -893,9 +1135,9 @@ $("day-rain").onclick = () => {
 };
 function renderUnsched(){
   const list = leads().filter(l => l.status === "won");
-  $("unsched-n").textContent = list.length ? `(${list.length})` : ""; $("unsched-count").textContent = list.length ? `(${list.length})` : "";
+  $("unsched-n").textContent = list.length ? `(${list.length})` : ""; $("unsched-count").textContent = list.length ? String(list.length) : "";
   const box = $("unsched-list"); box.textContent = "";
-  if (!list.length) box.append(el("p", "muted", "No Won jobs waiting for a day."));
+  if (!list.length) box.append(el("p", "empty", "No Won jobs waiting for a day."));
   for (const l of list){
     const c = el("div", "lead"), who = el("div", "who"); c.dataset.unsched = l.id;
     who.append(el("span", "", (l.name || "No name") + " · " + money(leadPrice(l))), el("span", "pill won", "Won"));
@@ -904,10 +1146,14 @@ function renderUnsched(){
     box.append(c);
   }
 }
-function renderSched(){ renderCal(); renderDay(); renderUnsched(); }
+function renderSched(){ renderCal(); renderGrid(); renderDayInfo(); renderUnsched(); paintJob(); renderHome(); }
+document.querySelectorAll("[data-mode]").forEach(b => b.onclick = () => { cal.mode = b.dataset.mode; cal.start = startFor(cal.sel); renderSched(); });
+function shiftRange(dir){ const n = modeDays() * dir; cal.start = addDays(cal.start, n); cal.sel = addDays(cal.sel, n); const d = fromYmd(cal.sel); cal.y = d.getFullYear(); cal.m = d.getMonth(); renderSched(); }
+$("rng-prev").onclick = () => shiftRange(-1);
+$("rng-next").onclick = () => shiftRange(1);
 $("cal-prev").onclick = () => { cal.m--; if (cal.m < 0){ cal.m = 11; cal.y--; } renderCal(); };
 $("cal-next").onclick = () => { cal.m++; if (cal.m > 11){ cal.m = 0; cal.y++; } renderCal(); };
-$("cal-today").onclick = () => { const n = new Date(); cal.y = n.getFullYear(); cal.m = n.getMonth(); cal.sel = today(); renderCal(); renderDay(); };
+$("cal-today").onclick = () => { goDay(today()); renderSched(); };
 // the Schedule sheet: a day, a time window, which option they picked (if the quote had more than one), who's doing it
 let sch = null;
 function openSchedule(id){
@@ -948,10 +1194,34 @@ $("s-save").onclick = () => {
     x.job = {date, win, who}; x.status = "scheduled"; x.jobAt = Date.now(); x.doneAt = 0;
     if ((x.quote.options || [])[chosen]){ x.chosen = chosen; x.quote.total = leadPrice(x); }
   });
-  const d = fromYmd(date); cal.y = d.getFullYear(); cal.m = d.getMonth(); cal.sel = date; moveOpen = null;
+  goDay(date); moveOpen = null;
   closeSched(); renderSched(); toast("Scheduled: " + dayLabel(date) + ", " + winLabel(win));
 };
 $("s-unsched").onclick = () => { if (!sch) return; const id = sch.id; closeSched(); mutate(id, x => setStatus(x, "won")); toast("Off the schedule. It's under Unscheduled"); };
+
+// the "+" sheet: New quote, New job (schedule a customer)
+function hidePlus(){ $("psheet").hidden = true; $("pjsheet").hidden = true; }
+$("plus-btn").onclick = () => { closeSheets(); $("pjsheet").hidden = true; $("psheet").hidden = false; };
+$("p-close").onclick = hidePlus; $("pj-close").onclick = hidePlus;
+$("p-quote").onclick = () => {
+  hidePlus();
+  if (quoteDirty() && !st.editId && !st.fromSale) toast("Back to your unfinished quote. Start over clears it");
+  else resetQuote();
+  openQuote();
+};
+$("p-job").onclick = () => {
+  $("psheet").hidden = true;
+  const list = leads().filter(l => l.status === "won" || l.status === "quoted").sort((a, b) => (b.status === "won") - (a.status === "won"));
+  const box = $("pj-list"); box.textContent = "";
+  if (!list.length) box.append(el("p", "empty", "Nobody is waiting for a day. Save a quote first."));
+  for (const l of list){
+    const b = el("button", "item"), g = el("div", "grow"), end = el("div", "end"); b.type = "button"; b.dataset.pj = l.id;
+    g.append(el("b", "", l.name || l.address || "No name"), el("span", "", l.name ? l.address || "" : ""));
+    end.append(el("span", "", money(leadPrice(l))), statusPill(l));
+    b.append(g, end); b.onclick = () => { hidePlus(); openSchedule(l.id); }; box.append(b);
+  }
+  $("pjsheet").hidden = false;
+};
 
 // ---------- team sync ----------
 // Leads (with their jobs) and doors save on this phone first (instant, works with no signal), then go up to the
@@ -1079,7 +1349,7 @@ function syncStatus(){
   else if (n) msg = `${n} waiting to send. They go to the team sheet when you have signal. ` + (syncErr && !/No signal/.test(syncErr) ? syncErr : "");
   else if (syncErr) msg = syncErr;
   else msg = last ? "✓ All saved to the team sheet · " + new Date(last).toLocaleTimeString("en-US", {hour:"numeric", minute:"2-digit"}) : "Not synced yet.";
-  for (const id of ["sync-status", "sync-status-l", "sync-status-d"]){ const e = $(id); e.textContent = msg; e.classList.toggle("warn", !!(t && (n || syncErr) && !syncing)); }
+  for (const id of ["sync-status"]){ const e = $(id); e.textContent = msg; e.classList.toggle("warn", !!(t && (n || syncErr) && !syncing)); }
   $("invite").hidden = !t;
   showNoSync();
   const dot = $("d-sync-dot"); dot.className = "sdot" + (!t ? "" : syncErr && /team code/.test(syncErr) ? " bad" : (n || syncErr) ? " wait" : " ok"); dot.title = msg;
@@ -1094,7 +1364,7 @@ addEventListener("online", syncIfOpen);
 setInterval(syncIfOpen, SYNC_EVERY_MS);
 $("sync-now").onclick = () => { if (!team()){ toast("Open the invite link on this phone first"); return; } syncNow(); };
 $("invite").onclick = async () => {
-  const text = "Saddleback Shine team link. Open the app the way you always do (Safari or your Home Screen icon), go to Doors > tap your name > Join with an invite link, and paste this (in Safari you can also just tap it): " + inviteLink();
+  const text = "Saddleback Shine team link. Open the app the way you always do (Safari or your Home Screen icon), go to More > Join with an invite link, and paste this (in Safari you can also just tap it): " + inviteLink();
   try{ if (navigator.share){ await navigator.share({title:"Saddleback Shine team", text}); return; } }catch(e){ return; }
   try{ await navigator.clipboard.writeText(text); toast("Invite link copied"); }catch(e){ toast("Couldn't copy on this phone"); }
 };
@@ -1144,7 +1414,8 @@ $("d-key").onclick = () => { $("d-legend").hidden = !$("d-legend").hidden; };
 // the map fills the screen under the top bar
 function sizeMap(){
   const top = $("dmap").getBoundingClientRect().top + window.scrollY;
-  if (top > 0) $("dmap").style.height = Math.max(320, innerHeight - top - 18) + "px";
+  const pad = parseFloat(getComputedStyle($("view-doors").parentElement).paddingBottom) || 0;   // room for the tab bar
+  if (top > 0) $("dmap").style.height = Math.max(320, innerHeight - top - pad - 2) + "px";
   dmap.invalidateSize();
 }
 addEventListener("resize", () => { if ($("view-doors").style.display !== "none") sizeMap(); });
@@ -1337,8 +1608,7 @@ $("later-skip").onclick = () => { closeSheets(); toast("Saved: Come back later")
 function startQuote(d, sale){
   resetQuote();
   st.address = d.address || ""; st.lat = d.lat != null ? d.lat : null; st.lon = d.lon != null ? d.lon : null; st.fromSale = !!sale;
-  showTab("quote"); paintQuote();
-  window.scrollTo({top:0});
+  paintQuote(); openQuote();
 }
 // doors logged with no signal get their address once the address tile loads
 let filling = false;
@@ -1409,7 +1679,7 @@ function showWho(){
 $("d-knocker").onclick = () => { openSheet("tsheet"); $("who").focus(); };
 $("d-today-chip").onclick = () => openSheet("tsheet");
 $("d-cb-chip").onclick = () => { renderComeBack(); openSheet("cbsheet"); };
-$("d-sync-dot").onclick = () => openSheet("tsheet");
+$("d-sync-dot").onclick = () => showTab("more");
 $("who").addEventListener("change", () => {
   const v = $("who").value.trim(); if (!v) return;
   S.seller = v; store.set(K.settings, S); showWho();
@@ -1421,9 +1691,11 @@ $("who").addEventListener("change", () => {
 // When the app comes back to the front and every 30 min. It refreshes by itself only when nothing is open;
 // otherwise a "New version ready" pill. Taps are saved first, so nothing is lost.
 // APP_VERSION is restamped (yyyymmddHHMMSS) each time the page is published; "dev" turns the check off.
-const APP_VERSION = "20261118141201";
+const APP_VERSION = "20261118153736";
+$("app-ver").textContent = APP_VERSION.replace(/^(\d{4})(\d\d)(\d\d)(\d\d)(\d\d).*/, "$1-$2-$3 $4:$5");
 function idleForReload(){
-  for (const id of ["dsheet", "cbsheet", "tsheet", "ssheet"]) if (!$(id).hidden) return false;
+  for (const id of ["dsheet", "cbsheet", "tsheet", "ssheet", "jsheet", "psheet", "pjsheet", "msheet"]) if (!$(id).hidden) return false;
+  if ($("view-card").style.display !== "none") return false;
   const a = document.activeElement; if (a && /INPUT|TEXTAREA|SELECT/.test(a.tagName)) return false;
   if (quoteDirty()) return false;   // a quote in progress
   return true;
@@ -1444,20 +1716,26 @@ setInterval(checkVersion, 30 * 60000);
 if ("serviceWorker" in navigator && location.protocol === "https:") navigator.serviceWorker.register("sw.js").catch(() => {});
 setInterval(() => { if ($("view-doors").style.display !== "none") renderComeBack(); }, 60000);
 
-// ---------- tabs ----------
-const VIEWS = ["doors", "quote", "leads", "sched"];
+// ---------- tabs: Today, Doors, Schedule, Customers, More ----------
+const VIEWS = ["home", "doors", "sched", "cust", "more"];
+const TITLES = {home:"Today", doors:"Doors", sched:"Schedule", cust:"Customers", more:"More"};
+const DEFAULT_TAB = "home";
 function showTab(t){
   for (const v of VIEWS){ $("view-" + v).style.display = t === v ? (v === "doors" ? "block" : "grid") : "none"; $("tab-" + v).setAttribute("aria-selected", t === v); }
-  closeSched();
+  $("screen-title").textContent = TITLES[t];
+  closeSched(); closeCard(); closeQuote(); closeJob(); $("psheet").hidden = $("pjsheet").hidden = $("msheet").hidden = true;
+  window.scrollTo(0, 0);
   if (t === "doors"){ startGPS(); showWho(); renderDoors(); setTimeout(sizeMap, 50); fillAddresses().catch(() => {}); if (!S.seller) setTimeout(() => { if (onDoors()) openSheet("tsheet"); }, 300); }
   else { stopGPS(); closeSheets(); }
-  if (t === "leads"){ renderLeads(); if ($("price-log").open) renderPrices(); }
+  if (t === "home") renderHome();
+  if (t === "cust") renderCust();
   if (t === "sched") renderSched();
+  if (t === "more"){ showBackupNote(); syncStatus(); if ($("price-log").open) renderPrices(); }
 }
 for (const v of VIEWS) $("tab-" + v).onclick = () => showTab(v);
 
 showWho(); showBackupNote(); paintQuote(); renderLeads(); renderSched(); syncStatus();
-showTab("doors");
+showTab(DEFAULT_TAB);
 if (team()){ queueLeadChanges(leads()); syncNow(); }
 </script>
 </body>
