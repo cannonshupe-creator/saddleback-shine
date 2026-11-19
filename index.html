@@ -107,6 +107,8 @@ label.f{display:grid;gap:4px;font-size:13px;color:var(--muted)}
 .pm-list{display:grid;gap:4px;font-size:14px}
 .pm-list div{display:flex;justify-content:space-between;border-bottom:1px solid var(--line);padding:4px 0}
 .hint{font-size:13px;color:var(--muted)}
+.zdrow{display:flex;align-items:center;gap:8px;font:600 14px var(--body);color:var(--ok)}
+.zdrow button{border:0;background:var(--bg);color:var(--ink);border-radius:99px;width:28px;height:28px;font:700 16px/1 var(--body)}
 .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(84px + env(safe-area-inset-bottom,0px));z-index:1300;max-width:calc(100vw - 32px);background:var(--ink);color:#fff;padding:9px 14px;border-radius:10px;font-weight:600;font-size:14px;text-align:center}
 details.mini>summary{cursor:pointer;color:var(--muted);font-size:13px;padding:4px 0}
 details.mini[open]>summary{margin-bottom:6px}
@@ -382,6 +384,10 @@ html.tech-mode #tech-app{display:block}
         <label class="f">Business phone (optional)<input id="pay-phone" type="tel" autocomplete="off"></label>
         <label class="f">Business email (optional)<input id="pay-email" type="email" autocomplete="off"></label></div>
       <label class="f">Preferred way to pay<select id="pay-pref"><option value="none">None</option><option value="zelle">Zelle</option><option value="venmo">Venmo</option><option value="card">Card</option><option value="check">Check</option></select></label>
+      <div class="grid2">
+        <label class="f">Zelle discount<select id="pay-zd"><option value="off">Off</option><option value="percent">Percent</option><option value="dollars">Dollars</option></select></label>
+        <label class="f">Discount amount<input id="pay-zdamt" type="number" inputmode="decimal" min="0" step="any" placeholder="10" autocomplete="off"></label></div>
+      <p class="hint" id="pay-zd-hint" hidden>Add your Zelle above first. The discount only applies to the Zelle line.</p>
       <label class="f">Payment due<select id="pay-due"><option value="completion">On completion</option><option value="7">7 days</option><option value="14">14 days</option></select></label>
     </section>
     <section class="sec"><h2>Your data</h2>
@@ -534,6 +540,7 @@ html.tech-mode #tech-app{display:block}
   <div class="chips" id="pay-methods" role="group" aria-label="How they paid"></div>
   <div class="grid2"><label class="f">Amount $<input id="pay-amt" type="number" inputmode="decimal" min="0" step="any"></label>
     <label class="f">Tip $ (optional)<input id="pay-tip" type="number" inputmode="decimal" min="0" step="any"></label></div>
+  <div class="zdrow" id="pay-disc" hidden><span id="pay-disc-t"></span><button type="button" id="pay-disc-x" aria-label="Remove the discount">×</button></div>
   <label class="f">Date<input id="pay-date" type="date"></label>
   <div class="row"><button class="btn primary" id="pay-save" type="button">Save payment</button><button class="btn" id="pay-undo" type="button">Undo last payment</button></div>
 </div>
@@ -921,11 +928,12 @@ function legacyPaid(l){ const ps = payList(l); return !!l.paid && (!ps.length ||
 function payState(l){
   if (legacyPaid(l)) return "paid";
   const tot = invTotal(l), sum = paidSum(l);
-  if (sum > 0 && sum >= tot - 0.005) return "paid";
+  if (sum > 0 && sum + discSum(l) >= tot - 0.005) return "paid";
   if (sum > 0) return "part";
   return l.invoice ? "sent" : "none";
 }
-const owed = l => payState(l) === "paid" ? 0 : cents(Math.max(0, invTotal(l) - paidSum(l)));
+const discSum = l => cents(payList(l).reduce((a, p) => a + (Number(p.discount) || 0), 0));   // Zelle discounts given on this job
+const owed = l => payState(l) === "paid" ? 0 : cents(Math.max(0, invTotal(l) - paidSum(l) - discSum(l)));
 const daysAgo = ms => Math.round((fromYmd(today()) - fromYmd(ymd(new Date(ms)))) / 86400000);
 const shortDay = d => fromYmd(d).toLocaleDateString("en-US", {month:"short", day:"numeric"});
 function computeDue(at, l){
@@ -950,19 +958,36 @@ function payWays(){
   if (t("payee")) w.push(["check", t("payee")]);
   return w;
 }
+// Optional Zelle discount. The setting in force is copied onto the invoice when it is sent (invoice.zd); it is offered only
+// while nothing has been paid yet. The discount is rounded to the nearest dollar and never takes the amount below $0.
+function currentZd(){
+  const c = payCfg(), a = Number(c.zdAmt);
+  return (c.zdMode === "percent" || c.zdMode === "dollars") && a > 0 && String(c.zelle || "").trim() ? {mode: c.zdMode, amt: a} : null;
+}
+function zdDiscount(l){
+  const z = l.invoice && l.invoice.zd; if (!z || payList(l).length || legacyPaid(l)) return 0;
+  const base = invTotal(l), d = z.mode === "percent" ? Math.round(base * Number(z.amt) / 100) : Math.round(Number(z.amt));
+  return Math.max(0, Math.min(d, base));
+}
 // the preferred way to pay: what the owner picked, else Zelle when there is a Zelle value, else none
 function prefKey(){ const p = payCfg().pref; return p === "none" ? "" : p ? p : (String(payCfg().zelle || "").trim() ? "zelle" : ""); }
 const FAST = {zelle: v => "Zelle to " + v, venmo: v => "Venmo to " + v, card: v => "Card at " + v, check: v => "Check payable to " + v};
 const OTHER = {zelle: v => "Zelle: " + v, venmo: v => "Venmo: " + v, card: v => "Card: " + v, check: v => "Check: payable to " + v};
 function fastLine(){ const w = payWays().find(x => x[0] === prefKey()); return w ? "Fastest: " + FAST[w[0]](w[1]) : ""; }
-// every filled-in way, the preferred one first as "Fastest: ..."
-function waysList(){
-  const w = payWays(), pk = prefKey(), pw = w.find(x => x[0] === pk), out = [];
-  if (pw) out.push("Fastest: " + FAST[pw[0]](pw[1]));
-  w.filter(x => x !== pw).forEach(x => out.push(OTHER[x[0]](x[1])));
+// every filled-in way, the preferred one first as "Fastest: ..."; with a Zelle discount on the invoice, Zelle leads
+function waysList(l){
+  const w = payWays(), pk = prefKey(), out = [], zw = w.find(x => x[0] === "zelle"), zd = l ? zdDiscount(l) : 0;
+  let used = null;
+  if (zw && zd > 0){
+    const z = l.invoice.zd, off = z.mode === "percent" ? Number(z.amt) + "% off" : money(zd) + " off";
+    out.push((pk === "zelle" ? "Fastest: " : "") + "Zelle to " + zw[1] + ": " + off + ", pay " + money(invTotal(l) - zd)); used = zw;
+  }
+  const pw = w.find(x => x[0] === pk);
+  if (pw && pw !== used) out.push("Fastest: " + FAST[pw[0]](pw[1]));
+  w.filter(x => x !== used && x !== pw).forEach(x => out.push(OTHER[x[0]](x[1])));
   return out;
 }
-function waysLines(){ const w = waysList(); return w.length ? ["Ways to pay:"].concat(w) : ["Pay by cash or check."]; }
+function waysLines(l){ const w = waysList(l); return w.length ? ["Ways to pay:"].concat(w) : ["Pay by cash or check."]; }
 function invoiceItems(l){
   const gs = payGroups(l.quote), sp = (l.job && l.job.split) || {};
   if (gs.length > 1 && gs.every(k => sp[k] !== "" && sp[k] != null && isFinite(sp[k])) && Math.abs(gs.reduce((a, k) => a + Number(sp[k]), 0) - invTotal(l)) < 0.005)
@@ -980,7 +1005,7 @@ function invoiceText(l){
   if (items.length > 1) items.forEach(i => lines.push(i.label + ": " + money(i.amt))); else lines.push(items[0].label);
   if (sum > 0) lines.push("Paid so far: " + money(sum) + " of " + money(invTotal(l)), "Balance: " + money(owed(l)) + " · Due " + dueWord(l));
   else lines.push("Total: " + money(invTotal(l)) + " · Due " + dueWord(l));
-  lines.push("", ...waysLines(), "", "Questions? Reply here" + (ph ? " or call " + ph : "") + ".");
+  lines.push("", ...waysLines(l), "", "Questions? Reply here" + (ph ? " or call " + ph : "") + ".");
   return lines.join("\n");
 }
 function reminderText(l){
@@ -995,6 +1020,7 @@ function ensureInvoice(id){
     const now = Date.now(), had = x.invoice, at = had ? had.at : now, no = had ? had.no : nextInvoiceNo();
     x.invoice = Object.assign({}, had || {}, {no, at, total: leadPrice(x)}); delete x.invoice.was;
     x.invoice.due = computeDue(at, x); x.jobAt = now; out = x;
+    const zd = currentZd(); if (zd) x.invoice.zd = zd; else delete x.invoice.zd;
     S.pay = Object.assign({}, S.pay || {}, {invNext: Math.max(Number(payCfg().invNext) || 0, no + 1)}); store.set(K.settings, S);
   });
   return out;
@@ -1031,20 +1057,22 @@ function buildInvoicePdf(l){
   invoiceItems(l).forEach(i => { const ls = doc.splitTextToSize(i.label, 360); doc.text(ls, M, y + 20); doc.text(money(i.amt), R, y + 20, {align:"right"}); y += 12 + 14 * ls.length + 4; doc.line(M, y, R, y); });
   const sum = paidSum(l), st = payState(l), row = (label, val, bold, size) => { doc.setFont("helvetica", bold ? "bold" : "normal"); doc.setFontSize(size || 11); ink(); doc.text(label, R - 150, y); doc.text(val, R, y, {align:"right"}); };
   y += 30; const totalY = y; row("Total", money(invTotal(l)), true, 13);
+  const dsum = discSum(l);
+  if (dsum > 0){ y += 20; row("Zelle discount", "-" + money(dsum)); }
   if (st === "part"){ y += 20; row("Amount paid", money(sum)); y += 18; row("Balance due", money(owed(l)), true); }
   if (st === "paid"){ y += 20; row("Balance due", "$0", true); }
   if (st === "paid"){
     const ps = payList(l), last = ps[ps.length - 1], meth = [...new Set(ps.map(p => PAY_WORD[p.method] || p.method))].join(", ");
     const when = last && last.date ? shortDay(last.date) : (l.paidAt ? new Date(l.paidAt).toLocaleDateString("en-US", {month:"short", day:"numeric"}) : "");
     // the stamp sits on the left, level with the Total rows and clear of the table rule above and everything below
-    doc.setDrawColor(46, 158, 91); doc.setTextColor(46, 158, 91); doc.setLineWidth(1.5); doc.roundedRect(M, totalY - 4, 170, 56, 4, 4);
+    doc.setDrawColor(46, 158, 91); doc.setTextColor(46, 158, 91); doc.setLineWidth(1.5); doc.roundedRect(M, totalY - 4, 170, 56, 4, 4);   // left column; the rows are on the right, so nothing touches it
     doc.setFont("helvetica", "bold"); doc.setFontSize(22); doc.text("PAID", M + 85, totalY + 24, {align:"center"});
     doc.setFontSize(9); doc.text([when, meth].filter(Boolean).join(" · "), M + 85, totalY + 41, {align:"center"});
     y += 70;
   } else {
     y += 22; doc.setFont("helvetica", "bold"); doc.setFontSize(11); ink(); doc.text("Due " + dueWord(l), R, y, {align:"right"});
     y += 36;
-    const ways = waysList(); if (!ways.length) ways.push("Pay by cash or check.");
+    const ways = waysList(l); if (!ways.length) ways.push("Pay by cash or check.");
     const bh = 34 + 15 * ways.length;
     doc.setDrawColor(8, 119, 201); doc.setLineWidth(0.8); doc.roundedRect(M, y, R - M, bh, 4, 4);
     doc.setFont("helvetica", "bold"); doc.setFontSize(10); blue(); doc.text("WAYS TO PAY", M + 14, y + 20);
@@ -1064,8 +1092,8 @@ function finishPay(x){
   if (payState(x) === "paid"){ x.paid = true; x.paidAt = Math.max(0, ...payList(x).map(p => Number(p.at) || 0)) || Date.now(); }
   x.jobAt = Date.now();
 }
-let payFor = null, payMethod = "";
-function openPay(id){ payFor = id; payMethod = ""; paintPaySheet(true); $("paysheet").hidden = false; }
+let payFor = null, payMethod = "", payDisc = 0;
+function openPay(id){ payFor = id; payMethod = ""; payDisc = 0; paintPaySheet(true); $("paysheet").hidden = false; }
 function closePay(){ payFor = null; $("paysheet").hidden = true; }
 function paintPaySheet(fresh){
   const l = leads().find(x => x.id === payFor); if (!l){ closePay(); return; }
@@ -1073,26 +1101,28 @@ function paintPaySheet(fresh){
   $("pay-addr").textContent = l.address || l.name || "Job";
   $("pay-sub").textContent = st === "paid" ? "Paid in full · " + money(tot) : sum > 0 ? money(sum) + " of " + money(tot) + " paid" : money(tot) + " due";
   const list = $("pay-list"); list.textContent = "";
-  for (const p of payList(l)){ const d = el("div"); d.append(el("span", "", (p.date ? shortDay(p.date) : "") + " · " + (PAY_WORD[p.method] || p.method) + (p.tip > 0 ? " (tip " + money(p.tip) + ")" : "")), el("b", "", money(p.amt))); list.append(d); }
+  for (const p of payList(l)){ const d = el("div"); d.append(el("span", "", (p.date ? shortDay(p.date) : "") + " · " + (PAY_WORD[p.method] || p.method) + (p.tip > 0 ? " (tip " + money(p.tip) + ")" : "") + (p.discount > 0 ? " (Zelle discount −" + money(p.discount) + ")" : "")), el("b", "", money(p.amt))); list.append(d); }
   if (legacyPaid(l) && !payList(l).length) list.append(el("div", "", "Marked paid"));
   const ch = $("pay-methods"); ch.textContent = "";
-  for (const [k, label] of PAY_METHODS){ const b = el("button", "chip mini", label); b.type = "button"; b.dataset.pm = k; b.setAttribute("aria-pressed", payMethod === k); b.onclick = () => { payMethod = k; paintPaySheet(false); }; ch.append(b); }
-  if (fresh || document.activeElement !== $("pay-amt")) $("pay-amt").value = owed(l) || "";
+  for (const [k, label] of PAY_METHODS){ const b = el("button", "chip mini", label); b.type = "button"; b.dataset.pm = k; b.setAttribute("aria-pressed", payMethod === k); b.onclick = () => { payMethod = k; payDisc = k === "zelle" ? zdDiscount(l) : 0; paintPaySheet(false); }; ch.append(b); }
+  if (fresh || document.activeElement !== $("pay-amt")) $("pay-amt").value = cents(owed(l) - payDisc) || "";
+  $("pay-disc").hidden = !(payDisc > 0 && payMethod === "zelle"); $("pay-disc-t").textContent = "Zelle discount −" + money(payDisc);
   if (fresh){ $("pay-tip").value = ""; $("pay-date").value = today(); }
   $("pay-undo").hidden = !(payList(l).length || l.paid);
 }
 $("pay-close").onclick = closePay;
+$("pay-disc-x").onclick = () => { payDisc = 0; paintPaySheet(false); };
 $("pay-save").onclick = () => {
   const l = leads().find(x => x.id === payFor); if (!l) return;
   const amt = cents(parseFloat($("pay-amt").value)), tip = cents(parseFloat($("pay-tip").value) || 0), date = $("pay-date").value || today();
   if (!payMethod){ toast("Pick how they paid"); return; }
   if (!(amt > 0)){ toast("Type the amount"); return; }
   mutate(payFor, x => {
-    x.payments = payList(x).concat([{amt, method: payMethod, date, at: Date.now(), tip: tip > 0 ? tip : 0}]);
+    x.payments = payList(x).concat([Object.assign({amt, method: payMethod, date, at: Date.now(), tip: tip > 0 ? tip : 0}, payMethod === "zelle" && payDisc > 0 ? {discount: payDisc} : {})]);
     if (tip > 0 && x.job) x.job.tip = cents((Number(x.job.tip) || 0) + tip);
     finishPay(x);
   });
-  payMethod = ""; $("pay-tip").value = ""; paintPaySheet(true); toast("Payment saved");
+  payMethod = ""; payDisc = 0; $("pay-tip").value = ""; paintPaySheet(true); toast("Payment saved");
 };
 $("pay-undo").onclick = () => {
   mutate(payFor, x => {
@@ -1751,17 +1781,20 @@ function paintPaySettings(){
   const c = payCfg();
   for (const [id, k] of [["pay-biz", "biz"], ["pay-zelle", "zelle"], ["pay-venmo", "venmo"], ["pay-payee", "payee"], ["pay-link", "link"], ["pay-due", "due"], ["pay-phone", "phone"], ["pay-email", "email"]]) if (document.activeElement !== $(id)) $(id).value = c[k] || (k === "due" ? "completion" : "");
   if (document.activeElement !== $("pay-pref")) $("pay-pref").value = prefKey() || "none";
+  if (document.activeElement !== $("pay-zd")) $("pay-zd").value = c.zdMode || "off";
+  if (document.activeElement !== $("pay-zdamt")) $("pay-zdamt").value = c.zdAmt || "";
+  $("pay-zd-hint").hidden = !!String(c.zelle || "").trim();
 }
 function savePaySettings(){
   const v = id => $(id).value.trim();
-  S.pay = {biz: v("pay-biz"), zelle: v("pay-zelle"), venmo: v("pay-venmo"), payee: v("pay-payee"), link: v("pay-link"), due: $("pay-due").value, phone: v("pay-phone"), email: v("pay-email"), invNext: payCfg().invNext, at: Date.now()};
+  S.pay = {biz: v("pay-biz"), zelle: v("pay-zelle"), venmo: v("pay-venmo"), payee: v("pay-payee"), link: v("pay-link"), due: $("pay-due").value, phone: v("pay-phone"), email: v("pay-email"), zdMode: $("pay-zd").value, zdAmt: Number(v("pay-zdamt")) > 0 ? Number(v("pay-zdamt")) : 0, invNext: payCfg().invNext, at: Date.now()};
   // the preferred way stays "automatic" (Zelle when there is one) until the owner touches the box
   if (prefTouched || (S.pay && S.pay.pref)) S.pay.pref = $("pay-pref").value;
   store.set(K.settings, S); paintPaySettings(); if (team()) scheduleSync(300);
 }
 let prefTouched = false;
 $("pay-pref").addEventListener("change", () => { prefTouched = true; });
-for (const id of ["pay-biz", "pay-zelle", "pay-venmo", "pay-payee", "pay-link", "pay-due", "pay-phone", "pay-email", "pay-pref"]) $(id).addEventListener("change", savePaySettings);
+for (const id of ["pay-biz", "pay-zelle", "pay-venmo", "pay-payee", "pay-link", "pay-due", "pay-phone", "pay-email", "pay-pref", "pay-zd", "pay-zdamt"]) $(id).addEventListener("change", savePaySettings);
 function mergePay(r){
   const inv = Math.max(Number(r.invNext) || 0, Number(payCfg().invNext) || 0);
   S.pay = Number(r.at || 0) > Number((S.pay || {}).at || 0) ? Object.assign({}, r, {invNext: inv}) : Object.assign({}, S.pay || {}, {invNext: inv});
@@ -2129,7 +2162,7 @@ $("who").addEventListener("change", () => {
 // When the app comes back to the front and every 30 min. It refreshes by itself only when nothing is open;
 // otherwise a "New version ready" pill. Taps are saved first, so nothing is lost.
 // APP_VERSION is restamped (yyyymmddHHMMSS) each time the page is published; "dev" turns the check off.
-const APP_VERSION = "20261118220741";
+const APP_VERSION = "20261118222546";
 $("app-ver").textContent = APP_VERSION.replace(/^(\d{4})(\d\d)(\d\d)(\d\d)(\d\d).*/, "$1-$2-$3 $4:$5");
 function idleForReload(){
   for (const id of ["dsheet", "cbsheet", "tsheet", "ssheet", "jsheet", "psheet", "pjsheet", "msheet", "paysheet"]) if (!$(id).hidden) return false;
