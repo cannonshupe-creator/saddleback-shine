@@ -220,10 +220,31 @@ td:first-child,th:first-child{text-align:left}
 .nosync .btn{background:#fff;color:#c0392b;font-weight:800}
 .updpill{position:fixed;left:50%;transform:translateX(-50%);top:calc(10px + env(safe-area-inset-top,0px));z-index:1200;border:0;background:var(--accent);color:var(--accent-ink);border-radius:99px;padding:10px 16px;font:700 14px var(--body);box-shadow:0 4px 14px rgba(0,0,0,.25);white-space:nowrap}
 .pick-list .item{padding:12px 4px}
+/* tech mode: the tech's phone shows only #tech-app */
+#tech-app{display:none;max-width:560px;margin:0 auto;padding:calc(14px + env(safe-area-inset-top,0px)) 16px calc(40px + env(safe-area-inset-bottom,0px))}
+html.tech-mode body>*:not(#tech-app):not(#upd):not(script):not(.toast){display:none!important}
+html.tech-mode #tech-app{display:block}
+#tech-app h1{font:700 34px/1.1 var(--display);margin:0}
+#tech-app .tw{font:600 20px var(--body);color:var(--accent);margin:4px 0 2px}
+#tech-app h2{margin:22px 0 8px;font-size:13px}
+.tjob{border:1px solid var(--line);border-radius:16px;padding:16px;margin-bottom:12px;display:grid;gap:8px;background:var(--surface)}
+.tjob.done{opacity:.6}
+.tjob .twin{font:700 18px var(--body);color:var(--accent)}
+.tjob a.taddr{font:700 26px/1.15 var(--display);color:var(--ink);text-decoration:underline;text-decoration-color:var(--accent);text-underline-offset:4px;overflow-wrap:anywhere}
+.tjob .twhat{font:500 18px/1.35 var(--body)}
+.tjob .tpay{font:700 20px var(--body)}
+.tjob .ttip{font:700 20px var(--body);color:var(--ok)}
+.tjob .tdone{min-height:60px;font:700 22px var(--body);border-radius:14px;border:0;background:var(--ok);color:#fff;width:100%}
+.toff{border:2px solid var(--warn);background:var(--warn-soft);border-radius:14px;padding:18px;font:700 20px/1.3 var(--body)}
+.paybox{display:grid;gap:8px;border:1px solid var(--line);border-radius:12px;padding:10px 12px;background:var(--bg)}
+.paybox .grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.paybox .grid2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.paybox .payline{font:700 15px var(--body)}
 @media (prefers-reduced-motion:no-preference){.btn,.seg button,.chip,.day{transition:background .15s}}
 </style>
 </head>
 <body>
+<script>try{ if (localStorage.getItem("ss-tech") || /tech=/.test(location.hash)) document.documentElement.classList.add("tech-mode"); }catch(e){}</script>
 <header class="topbar">
   <h1 id="screen-title">Today</h1>
   <button id="plus-btn" class="plus" type="button" aria-label="Add new"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></button>
@@ -240,13 +261,13 @@ td:first-child,th:first-child{text-align:left}
       <button id="d-knocker" class="dchip" type="button">Set your name</button>
       <button id="d-today-chip" class="dchip" type="button">Today 0</button>
       <button id="d-cb-chip" class="dchip" type="button">Come back 0</button>
-      <button id="d-sync-dot" class="sdot" type="button" aria-label="Sync status"></button>
+      <button id="d-sync-dot" class="sdot" type="button" aria-label="Saving status"></button>
     </div>
     <div id="d-nosync" class="nosync" hidden>
-      <button id="nj-open" type="button">NOT SYNCING – tap to join<small id="nj-sub">The other phone can't see your marks yet.</small></button>
+      <button id="nj-open" type="button"><span id="nj-msg">Not saving to your sheet. Open your setup link again.</span><small id="nj-sub"></small></button>
       <div id="nj-box" hidden>
-        <small>Paste the team invite link (from the text, or from the other phone: More &gt; Invite a teammate).</small>
-        <div class="row"><input id="nj-in" type="text" placeholder="Paste the invite link" autocomplete="off"><button class="btn small" id="nj-go" type="button">Join</button></div>
+        <small>Paste your setup link (from your text, or More &gt; Send my setup link on your other phone).</small>
+        <div class="row"><input id="nj-in" type="text" placeholder="Paste the setup link" autocomplete="off"><button class="btn small" id="nj-go" type="button">Open</button></div>
       </div>
     </div>
     <div class="dmapwrap">
@@ -327,11 +348,22 @@ td:first-child,th:first-child{text-align:left}
   <div id="view-more" style="display:none;gap:24px">
     <section class="sec"><h2>You</h2>
       <label class="f">Your first name (goes on every door, quote and text)<input id="s-seller" type="text" autocomplete="off"></label></section>
-    <section class="sec"><h2>Team</h2>
+    <section class="sec"><h2>Saving</h2>
       <p class="muted" id="sync-status"></p>
-      <div class="row"><button class="btn small" id="sync-now" type="button">Sync now</button><button class="btn small" id="invite" type="button" hidden>Invite a teammate</button></div>
-      <details class="mini"><summary>Join with an invite link</summary>
-        <div class="row"><input id="join-in" type="text" placeholder="Paste the invite link" autocomplete="off"><button class="btn small" id="join-go" type="button">Join</button></div></details>
+      <div class="row"><button class="btn small" id="sync-now" type="button">Send now</button><button class="btn small" id="invite" type="button" hidden>Send my setup link</button></div>
+      <details class="mini"><summary>Use a setup link</summary>
+        <div class="row"><input id="join-in" type="text" placeholder="Paste the setup link" autocomplete="off"><button class="btn small" id="join-go" type="button">Open</button></div></details>
+    </section>
+    <section class="sec"><h2>Tech pay</h2>
+      <label class="f">Tech's name<input id="t-name" type="text" autocomplete="off"></label>
+      <div class="paybox"><div class="grid3">
+        <label class="f">Windows %<input id="t-w" type="number" inputmode="decimal" min="0" max="100"></label>
+        <label class="f">Gutters %<input id="t-g" type="number" inputmode="decimal" min="0" max="100"></label>
+        <label class="f">Solar %<input id="t-s" type="number" inputmode="decimal" min="0" max="100"></label></div>
+        <span class="muted" id="t-tipline"></span></div>
+      <h2 id="tl-title" style="margin-top:10px"></h2>
+      <p class="muted" id="tl-note"></p>
+      <div class="row"><button class="btn small primary" id="tl-send" type="button">Send link</button><button class="btn small" id="tl-off" type="button">Turn off this link</button></div>
     </section>
     <section class="sec"><h2>Your data</h2>
       <div class="row">
@@ -411,7 +443,7 @@ td:first-child,th:first-child{text-align:left}
           <button type="button" class="chip" data-tag="hard" aria-pressed="false">Hard to reach</button>
           <button type="button" class="chip" data-tag="sky" aria-pressed="false">Skylights</button>
         </div>
-        <label class="f">Notes (only the team sees these)<textarea id="q-notes" rows="2" autocomplete="off"></textarea></label>
+        <label class="f">Notes (only you see these)<textarea id="q-notes" rows="2" autocomplete="off"></textarea></label>
         <h2>Extra options</h2>
         <div id="opts" class="results"></div>
         <button class="btn small" id="opt-add" type="button">Add another option</button>
@@ -467,9 +499,17 @@ td:first-child,th:first-child{text-align:left}
       <label class="f">Another day<input id="s-date" type="date"></label></div>
     <div class="q"><span class="qlabel">Time window</span><div class="chips" id="s-wins"></div></div>
     <div class="q" id="s-opt-row" hidden><span class="qlabel">Which option did they pick?</span><div class="chips" id="s-opts"></div></div>
-    <label class="f">Assigned to (optional)<input id="s-who" type="text" autocomplete="off" placeholder="Name"></label>
+    <div class="q"><span class="qlabel">Assigned to</span><div class="chips" id="s-whos"></div><input id="s-who" type="hidden"></div>
+    <div class="paybox" id="s-pay">
+      <span class="payline" id="s-payline"></span>
+      <div class="grid3" id="s-split"></div>
+      <div class="grid2"><label class="f"><span id="s-man-l">Tech pay $</span><input id="s-man" type="number" inputmode="decimal" min="0" step="any" placeholder="auto"></label>
+        <label class="f">Tip $<input id="s-tip" type="number" inputmode="decimal" min="0" step="any"></label></div>
+    </div>
     <div class="row"><button class="btn primary" id="s-save" type="button">Save to the schedule</button><button class="btn" id="s-unsched" type="button" hidden>Take off the schedule</button></div>
   </div>
+
+<div id="tech-app"></div>
 
 <button id="upd" class="updpill" type="button" hidden>New version ready · tap to refresh</button>
 <script>
@@ -481,7 +521,8 @@ const store = {
   set(k, v){ try{ localStorage.setItem(k, JSON.stringify(v)); }catch(e){} }
 };
 const K = {settings:"ss-settings", leads:"ss-leads", prices:"ss-pricelog", team:"ss-team", outbox:"ss-outbox", shadow:"ss-lead-shadow",
-  doors:"ss-doors", seq:"ss-seq", lastsync:"ss-lastsync", lastbackup:"ss-lastbackup"};
+  doors:"ss-doors", seq:"ss-seq", lastsync:"ss-lastsync", lastbackup:"ss-lastbackup",
+  techtok:"ss-techtok", techdirty:"ss-techdirty", tech:"ss-tech", techjobs:"ss-techjobs", techq:"ss-techq", techoff:"ss-techoff"};
 const S = Object.assign({seller:""}, store.get(K.settings, {}));
 
 const $ = id => document.getElementById(id);
@@ -771,6 +812,31 @@ function logPrices(l){
     options: q.options.map((o, i) => ({label:o.label, price:o.price, def: i === q.def})), repeat: q.repeat, repeatPrice: q.repeatPrice});
   store.set(K.prices, log.slice(0, 500));
 }
+// ---------- tech pay ----------
+// Pay is worked out from the price per service group and STORED on the job (job.pay, with the percentages used and a
+// signature of what it was worked out from), so changing the scale later never touches a saved job. A job's pay is
+// recalculated only when its price, services or per-group split change, unless the owner typed the pay in (job.payManual).
+const PAYG = {w:["ext", "int", "screens", "tracks"], g:["gutters"], s:["solar"]};
+const PAYG_LABEL = {w:"Windows", g:"Gutters", s:"Solar"};
+const techCfg = () => Object.assign({name:"Jose", w:50, g:60, s:65}, S.tech || {});
+const techName = () => String(techCfg().name || "").trim() || "Jose";
+const isTechJob = l => !!(l.job && String(l.job.who || "").trim().toLowerCase() === techName().toLowerCase());
+function payGroups(q){ const have = (q && q.svc) || []; return Object.keys(PAYG).filter(k => PAYG[k].some(x => have.includes(x))); }
+function calcPay(l, split){
+  const gs = payGroups(l.quote), total = Number(leadPrice(l)) || 0, cfg = techCfg(), pcts = {w:Number(cfg.w), g:Number(cfg.g), s:Number(cfg.s)};
+  if (!gs.length || !total) return {amt:null, groups:gs, need:false, pcts};
+  if (gs.length === 1) return {amt: cents(total * pcts[gs[0]] / 100), groups:gs, need:false, pcts};
+  const sp = split || {}, filled = gs.every(k => sp[k] !== "" && sp[k] != null && isFinite(sp[k])), sum = gs.reduce((a, k) => a + (Number(sp[k]) || 0), 0);
+  if (!filled || Math.abs(sum - total) > 0.005) return {amt:null, groups:gs, need:true, pcts};
+  return {amt: cents(gs.reduce((a, k) => a + Number(sp[k]) * pcts[k] / 100, 0)), groups:gs, need:false, pcts};
+}
+function applyPay(l){
+  const j = l.job; if (!j) return;
+  if (j.payManual != null){ j.pay = j.payManual; j.payPct = null; j.paySig = "manual"; return; }
+  const c = calcPay(l, j.split), sig = JSON.stringify([leadPrice(l), c.groups, j.split || null]);
+  if (j.paySig === sig) return;
+  j.pay = c.amt; j.payPct = c.pcts; j.paySig = sig;
+}
 function saveLead(sent){
   const f = formLead(), bad = problem(f, sent);
   if (bad){ toast(bad); return null; }
@@ -783,7 +849,7 @@ function saveLead(sent){
       consent: l.consent || f.consent, quote: f.quote, touches: Math.max(l.touches || 0, sent ? 1 : 0)});
     if (f.lat != null){ l.lat = f.lat; l.lon = f.lon; }
     if (l.chosen != null && !f.quote.options[l.chosen]) l.chosen = null;
-    l.quote.total = leadPrice(l);
+    l.quote.total = leadPrice(l); if (l.job) applyPay(l);   // a new price recalculates the pay (unless it was typed in)
     all.splice(all.indexOf(l), 1); all.unshift(l);
   } else {
     l = Object.assign(f, {id: rid(), touches: sent ? 1 : 0});
@@ -1071,6 +1137,14 @@ function jobCard(l){
   c.append(who, el("div", "big", l.address || "No address"), el("div", "", [svcText(l.quote), money(leadPrice(l))].filter(Boolean).join(" · ")));
   c.append(el("div", "muted", [l.name || "No name", detailText(l.quote), l.job.who ? "Assigned to " + l.job.who : ""].filter(Boolean).join(" · ")));
   if (l.quote && l.quote.notes) c.append(el("div", "muted", "Notes: " + l.quote.notes));
+  if (isTechJob(l)){
+    const nm = techName(), j = l.job;
+    c.append(el("div", "payline", j.pay != null ? nm + "'s pay: " + money(j.pay) : "Add a price for each service to work out pay"));
+    if (Number(j.tip) > 0) c.append(el("div", "payline", "Tip: " + money(j.tip) + " (all to " + nm + ")"));
+    const tl = el("label", "f", "Tip $"), ti = document.createElement("input"); ti.type = "number"; ti.inputMode = "decimal"; ti.step = "any"; ti.min = "0"; ti.value = j.tip || ""; ti.dataset.tip = l.id;
+    ti.onchange = () => { const v = ti.value.trim(); mutate(l.id, x => { if (v === "" || !isFinite(v)) delete x.job.tip; else x.job.tip = Number(v); x.jobAt = Date.now(); }); };
+    tl.append(ti); c.append(tl);
+  }
   const row = el("div", "row"), nav = link("Navigate", "", navUrl(l)); nav.target = "_blank"; nav.rel = "noopener";
   row.append(nav);
   if (l.phone) row.append(link("Call", "", "tel:" + l.phone.replace(/[^\d+]/g, "")));
@@ -1164,6 +1238,16 @@ function openSchedule(id){
   $("s-addr").textContent = l.address || "No address";
   $("s-sub").textContent = [l.name, svcText(q)].filter(Boolean).join(" · ");
   $("s-who").value = (l.job && l.job.who) || "";
+  const j0 = l.job || {}, gs = payGroups(q);
+  sch.split = Object.assign({}, j0.split); sch.man = j0.payManual != null ? String(j0.payManual) : ""; sch.tip = j0.tip ? String(j0.tip) : "";
+  $("s-man").value = sch.man; $("s-tip").value = sch.tip;
+  const sp = $("s-split"); sp.textContent = ""; sp.hidden = gs.length < 2;
+  for (const k of gs){
+    const lb = el("label", "f", PAYG_LABEL[k] + " $"), inp = document.createElement("input"); inp.type = "number"; inp.inputMode = "decimal"; inp.min = "0"; inp.step = "any"; inp.dataset.split = k;
+    inp.value = sch.split[k] != null ? sch.split[k] : ""; inp.oninput = () => { sch.split[k] = inp.value.trim() === "" ? "" : inp.value.trim(); paintPay(); };
+    lb.append(inp); sp.append(lb);
+  }
+  paintWho();
   $("s-unsched").hidden = !sch.has;
   $("s-save").textContent = sch.has ? "Save the new day" : "Save to the schedule";
   const quick = $("s-quick"); quick.textContent = "";
@@ -1177,8 +1261,28 @@ function openSchedule(id){
   os.forEach((o, i) => { const b = el("button", "chip", (o.label || "Option " + (i + 1)) + " · " + money(o.price)); b.type = "button"; b.dataset.sopt = i; b.onclick = () => { sch.chosen = i; paintSchedule(); }; ob.append(b); });
   paintSchedule(); $("ssheet").hidden = false;
 }
+function paintWho(){
+  const box = $("s-whos"), cur = $("s-who").value.trim(), opts = [techName(), "Me"];
+  if (cur && !opts.some(o => o.toLowerCase() === cur.toLowerCase())) opts.push(cur);   // an older job assigned to someone else keeps its name
+  box.textContent = "";
+  for (const o of opts){
+    const b = el("button", "chip", o); b.type = "button"; b.dataset.who = o; b.setAttribute("aria-pressed", o.toLowerCase() === cur.toLowerCase());
+    b.onclick = () => { $("s-who").value = o.toLowerCase() === $("s-who").value.trim().toLowerCase() ? "" : o; paintWho(); paintPay(); };
+    box.append(b);
+  }
+}
+$("s-who").addEventListener("change", () => { paintWho(); paintPay(); });
+function paintPay(){
+  if (!sch) return;
+  const l = leads().find(x => x.id === sch.id); if (!l) return;
+  const c = calcPay(Object.assign({}, l, {chosen: sch.chosen}), sch.split), man = $("s-man").value.trim(), nm = techName();
+  $("s-payline").textContent = man !== "" && isFinite(man) ? nm + "'s pay: " + money(man) + " (typed in)" : c.amt != null ? nm + "'s pay: " + money(c.amt) : c.need ? "Add a price for each service to work out pay" : "";
+  $("s-payline").hidden = !$("s-payline").textContent;
+}
+$("s-man").addEventListener("input", paintPay);
 function paintSchedule(){
   if (!sch) return;
+  paintPay();
   document.querySelectorAll("[data-sday]").forEach(b => b.setAttribute("aria-pressed", b.dataset.sday === sch.date));
   document.querySelectorAll("[data-swin]").forEach(b => b.setAttribute("aria-pressed", b.dataset.swin === sch.win));
   document.querySelectorAll("[data-sopt]").forEach(b => b.setAttribute("aria-pressed", +b.dataset.sopt === sch.chosen));
@@ -1189,10 +1293,15 @@ $("s-close").onclick = closeSched;
 $("s-date").addEventListener("change", () => { if (sch && /^\d{4}-\d\d-\d\d$/.test($("s-date").value)){ sch.date = $("s-date").value; paintSchedule(); } });
 $("s-save").onclick = () => {
   if (!sch) return;
-  const {id, date, win, chosen} = sch, who = $("s-who").value.trim();
+  const {id, date, win, chosen} = sch, who = $("s-who").value.trim(), man = $("s-man").value.trim(), tip = $("s-tip").value.trim();
   mutate(id, x => {
-    x.job = {date, win, who}; x.status = "scheduled"; x.jobAt = Date.now(); x.doneAt = 0;
+    x.job = Object.assign({}, x.job, {date, win, who}); x.status = "scheduled"; x.jobAt = Date.now(); x.doneAt = 0;
     if ((x.quote.options || [])[chosen]){ x.chosen = chosen; x.quote.total = leadPrice(x); }
+    const j = x.job, gs = payGroups(x.quote);
+    j.split = gs.length > 1 ? Object.fromEntries(gs.map(k => [k, sch.split[k] === "" || sch.split[k] == null ? "" : Number(sch.split[k])])) : null;
+    if (man !== "" && isFinite(man)) j.payManual = Number(man); else { delete j.payManual; if (j.paySig === "manual") delete j.paySig; }
+    if (tip !== "" && isFinite(tip)) j.tip = Number(tip); else delete j.tip;
+    applyPay(x);
   });
   goDay(date); moveOpen = null;
   closeSched(); renderSched(); toast("Scheduled: " + dayLabel(date) + ", " + winLabel(win));
@@ -1238,7 +1347,7 @@ const OUT = {
 };
 const okSyncUrl = u => /^https:\/\/script\.google\.com\/macros\/s\/[\w-]+\/exec$/.test(u)
   || (/^(localhost|127\.0\.0\.1)$/.test(location.hostname) && /^http:\/\/127\.0\.0\.1:\d+\/$/.test(u));
-// Invite link: the page address + #join=<sheet address and team code>. The part after # never leaves the phone.
+// Setup link (the "invite link" in the code): the page address + #join=<sheet address and team code>. The part after # never leaves the phone.
 // (also on hashchange: tapping the link while the page is already open only changes the part after #)
 let joinedNow = false;
 function joinFromLink(text){
@@ -1246,22 +1355,28 @@ function joinFromLink(text){
   const fromUrl = text === undefined, m = (fromUrl ? location.hash : String(text)).match(/join=([A-Za-z0-9_-]+)/); if (!m) return false;
   try{
     const j = JSON.parse(atob(m[1].replace(/-/g, "+").replace(/_/g, "/")));
-    if (j.u && j.c && okSyncUrl(j.u)){ store.set(K.team, {url:j.u, code:j.c}); joinedNow = true; setTimeout(() => toast("Joined the team. Doors, quotes and jobs now sync."), 600); }
+    if (j.u && j.c && okSyncUrl(j.u)){ store.set(K.team, {url:j.u, code:j.c}); joinedNow = true; setTimeout(() => toast("Set up. Everything now saves to your sheet."), 600); }
   }catch(e){}
   if (fromUrl) history.replaceState(null, "", location.pathname + location.search);
   return joinedNow;
 }
 // A Home Screen app keeps its own storage, separate from Safari, so the link can also be pasted in.
 // An app that isn't joined shows a loud red bar on Doors.
+// The red bar shows only on a real problem: no code on this phone, a wrong code, or no signal.
+const MSG_BAD = "Not saving to your sheet. Open your setup link again.", MSG_OFFLINE = "No signal. It sends when you have signal again.";
 function showNoSync(){
-  const off = !team(), box = $("d-nosync");
-  const was = box.hidden; box.hidden = !off;
-  if (off){ const n = store.get(K.outbox, []).length; $("nj-sub").textContent = n ? `${n} tap${n === 1 ? "" : "s"} saved on this phone. They send the moment you join.` : "The other phone can't see your marks yet."; }
+  const off = !team(), box = $("d-nosync"), problem = off || !!syncErr;
+  const was = box.hidden; box.hidden = !problem;
+  if (problem){
+    const n = store.get(K.outbox, []).length;
+    $("nj-msg").textContent = off || syncErr === MSG_BAD ? MSG_BAD : MSG_OFFLINE;
+    $("nj-sub").textContent = off && n ? `${n} tap${n === 1 ? "" : "s"} saved on this phone. They send the moment you open your setup link.` : "";
+  }
   if (was !== box.hidden && $("view-doors").style.display !== "none") setTimeout(sizeMap, 30);
 }
-$("nj-open").onclick = () => { $("nj-box").hidden = !$("nj-box").hidden; if (!$("nj-box").hidden) $("nj-in").focus(); setTimeout(sizeMap, 30); };
+$("nj-open").onclick = () => { if (team() && syncErr !== MSG_BAD) return; $("nj-box").hidden = !$("nj-box").hidden; if (!$("nj-box").hidden) $("nj-in").focus(); setTimeout(sizeMap, 30); };
 function joinTyped(input){
-  if (!joinFromLink(input.value)){ toast("That isn't an invite link"); return false; }
+  if (!joinFromLink(input.value)){ toast("That isn't a setup link"); return false; }
   input.value = ""; queueLeadChanges(leads()); syncStatus(); syncNow(); return true;
 }
 $("nj-go").onclick = () => { if (joinTyped($("nj-in"))) $("nj-box").hidden = true; };
@@ -1300,19 +1415,24 @@ async function syncNow(){
   const batch = store.get(K.outbox, []).slice(0, 200);
   try{
     const ctl = new AbortController(), timer = setTimeout(() => ctl.abort(), 30000);
-    const r = await fetch(t.url, {method:"POST", body: JSON.stringify({code:t.code, since: store.get(K.seq, 0), events: batch}), signal: ctl.signal});
+    const body = {code:t.code, since: store.get(K.seq, 0), events: batch};
+    if (S.tech) body.settings = Object.assign({}, S.tech, {owner: S.seller || ""});   // the pay scale and tech's name ride along, so a new phone gets them
+    if (store.get(K.techdirty, false) && techTok()) body.techSet = {token: techTok().token, name: techName()};
+    const r = await fetch(t.url, {method:"POST", body: JSON.stringify(body), signal: ctl.signal});
     clearTimeout(timer);
     const j = await r.json();
     if (!j.ok) throw new Error(j.error || "sync failed");
     const done = new Set(j.applied || []);
     store.set(K.outbox, store.get(K.outbox, []).filter(e => !done.has(e.op)));
     if (j.seq < store.get(K.seq, 0)) store.set(K.seq, 0);   // the sheet was reset: pull it all next time
+    if (j.techSaved) store.set(K.techdirty, false);
+    if (j.settings && Number(j.settings.at || 0) > Number((S.tech || {}).at || 0)){ S.tech = Object.assign({}, j.settings); delete S.tech.owner; store.set(K.settings, S); paintTechSettings(); }
     mergeRemote(j); store.set(K.seq, j.seq); fillAddresses().catch(() => {}); store.set(K.lastsync, Date.now()); syncErr = "";
     syncing = false;
     if (store.get(K.outbox, []).length) scheduleSync(300);
   }catch(e){
     syncing = false;
-    syncErr = e.message === "wrong team code" ? "The team code changed. Ask for a new invite link." : "No signal. It sends when you have signal again.";
+    syncErr = e.message === "wrong team code" ? MSG_BAD : MSG_OFFLINE;
   }
   syncStatus();
 }
@@ -1344,15 +1464,15 @@ function mergeRemote(j){
 function syncStatus(){
   const t = team(), n = store.get(K.outbox, []).length, last = store.get(K.lastsync, 0);
   let msg;
-  if (!t) msg = "Team sync is off on this phone. Open the invite link to turn it on.";
-  else if (syncing) msg = "Syncing…";
-  else if (n) msg = `${n} waiting to send. They go to the team sheet when you have signal. ` + (syncErr && !/No signal/.test(syncErr) ? syncErr : "");
+  if (!t) msg = MSG_BAD;
+  else if (syncing) msg = "Saving…";
+  else if (n) msg = `${n} waiting to send` + (syncErr === MSG_BAD ? ". " + MSG_BAD : "");
   else if (syncErr) msg = syncErr;
-  else msg = last ? "✓ All saved to the team sheet · " + new Date(last).toLocaleTimeString("en-US", {hour:"numeric", minute:"2-digit"}) : "Not synced yet.";
+  else msg = "Saved ✓" + (last ? " " + new Date(last).toLocaleTimeString("en-US", {hour:"numeric", minute:"2-digit"}) : "");
   for (const id of ["sync-status"]){ const e = $(id); e.textContent = msg; e.classList.toggle("warn", !!(t && (n || syncErr) && !syncing)); }
   $("invite").hidden = !t;
   showNoSync();
-  const dot = $("d-sync-dot"); dot.className = "sdot" + (!t ? "" : syncErr && /team code/.test(syncErr) ? " bad" : (n || syncErr) ? " wait" : " ok"); dot.title = msg;
+  const dot = $("d-sync-dot"); dot.className = "sdot" + (!t || syncErr === MSG_BAD ? " bad" : (n || syncErr) ? " wait" : " ok"); dot.title = msg;
 }
 // When it syncs: on every save (above), when the app opens, when you come back to it, when signal returns,
 // and a slow check every 60 s while it's open to pick up the other phone's changes.
@@ -1362,11 +1482,50 @@ document.addEventListener("visibilitychange", syncIfOpen);
 addEventListener("pageshow", syncIfOpen);
 addEventListener("online", syncIfOpen);
 setInterval(syncIfOpen, SYNC_EVERY_MS);
-$("sync-now").onclick = () => { if (!team()){ toast("Open the invite link on this phone first"); return; } syncNow(); };
+$("sync-now").onclick = () => { if (!team()){ toast("Open your setup link on this phone first"); return; } syncNow(); };
 $("invite").onclick = async () => {
-  const text = "Saddleback Shine team link. Open the app the way you always do (Safari or your Home Screen icon), go to More > Join with an invite link, and paste this (in Safari you can also just tap it): " + inviteLink();
-  try{ if (navigator.share){ await navigator.share({title:"Saddleback Shine team", text}); return; } }catch(e){ return; }
-  try{ await navigator.clipboard.writeText(text); toast("Invite link copied"); }catch(e){ toast("Couldn't copy on this phone"); }
+  const text = "Saddleback Shine setup link. Open the app the way you always do (Safari or your Home Screen icon), go to More > Use a setup link, and paste this (in Safari you can also just tap it): " + inviteLink();
+  try{ if (navigator.share){ await navigator.share({title:"Saddleback Shine setup link", text}); return; } }catch(e){ return; }
+  try{ await navigator.clipboard.writeText(text); toast("Setup link copied"); }catch(e){ toast("Couldn't copy on this phone"); }
+};
+
+// ---------- tech pay settings and the tech's link ----------
+const techTok = () => store.get(K.techtok, null);
+function paintTechSettings(){
+  const c = techCfg(), nm = techName();
+  for (const [id, v] of [["t-name", S.tech && S.tech.name != null ? S.tech.name : c.name], ["t-w", c.w], ["t-g", c.g], ["t-s", c.s]]) if (document.activeElement !== $(id)) $(id).value = v;
+  $("t-tipline").textContent = "Tips: 100% to " + nm + " (fixed)";
+  $("tl-title").textContent = nm + "'s link";
+  $("tl-note").textContent = team() ? "One tap opens " + nm + "'s jobs on his phone. No sign-in, no typing. Turn it off if the phone is lost." : "Open your setup link on this phone first.";
+  $("tl-off").hidden = !techTok();
+}
+function saveTechSettings(){
+  const num = (id, d) => { const v = $(id).value.trim(); return v !== "" && isFinite(v) && v >= 0 && v <= 100 ? Number(v) : d; }, old = techCfg();
+  S.tech = {name: $("t-name").value.trim(), w: num("t-w", old.w), g: num("t-g", old.g), s: num("t-s", old.s), at: Date.now()};
+  store.set(K.settings, S);
+  if (techTok()) store.set(K.techdirty, true);   // the tech's name travels with the link's token
+  paintTechSettings(); if (team()) scheduleSync(300);
+}
+for (const id of ["t-name", "t-w", "t-g", "t-s"]) $(id).addEventListener("change", saveTechSettings);
+function newTechToken(){ const a = new Uint8Array(32); crypto.getRandomValues(a); return [...a].map(b => b.toString(16).padStart(2, "0")).join(""); }
+function b64url(obj){ return btoa(String.fromCharCode(...new TextEncoder().encode(JSON.stringify(obj)))).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, ""); }
+function techLink(){ const t = team(), k = techTok(); return t && k ? location.origin + location.pathname + "#tech=" + b64url({u:t.url, t:k.token, n:techName()}) : ""; }
+async function syncAndWait(){ for (let i = 0; i < 80 && syncing; i++) await new Promise(r => setTimeout(r, 100)); await syncNow(); }
+$("tl-send").onclick = async () => {
+  if (!team()){ toast("Open your setup link on this phone first"); return; }
+  if (!techTok()){ store.set(K.techtok, {token: newTechToken()}); store.set(K.techdirty, true); }
+  await syncAndWait();
+  if (store.get(K.techdirty, false)){ toast("Couldn't set up the link yet. Try again with signal."); return; }
+  const nm = techName(), text = "Hi " + nm + ", tap this to see your jobs: " + techLink();
+  paintTechSettings();
+  try{ if (navigator.share){ await navigator.share({title: nm + "'s jobs", text}); return; } }catch(e){ return; }
+  try{ await navigator.clipboard.writeText(text); toast("Link copied"); }catch(e){ toast("Couldn't copy on this phone"); }
+};
+$("tl-off").onclick = async () => {
+  if (!confirm("Turn off " + techName() + "'s link? His phone stops showing jobs until you send a new link.")) return;
+  store.set(K.techtok, {token: newTechToken()}); store.set(K.techdirty, true);
+  await syncAndWait();
+  toast(store.get(K.techdirty, false) ? "No signal. The old link stays on until this sends." : "Link turned off. Tap Send link for a new one.");
 };
 
 // ---------- doors: a map that follows you ----------
@@ -1691,7 +1850,7 @@ $("who").addEventListener("change", () => {
 // When the app comes back to the front and every 30 min. It refreshes by itself only when nothing is open;
 // otherwise a "New version ready" pill. Taps are saved first, so nothing is lost.
 // APP_VERSION is restamped (yyyymmddHHMMSS) each time the page is published; "dev" turns the check off.
-const APP_VERSION = "20261118153736";
+const APP_VERSION = "20261118202016";
 $("app-ver").textContent = APP_VERSION.replace(/^(\d{4})(\d\d)(\d\d)(\d\d)(\d\d).*/, "$1-$2-$3 $4:$5");
 function idleForReload(){
   for (const id of ["dsheet", "cbsheet", "tsheet", "ssheet", "jsheet", "psheet", "pjsheet", "msheet"]) if (!$(id).hidden) return false;
@@ -1730,13 +1889,128 @@ function showTab(t){
   if (t === "home") renderHome();
   if (t === "cust") renderCust();
   if (t === "sched") renderSched();
-  if (t === "more"){ showBackupNote(); syncStatus(); if ($("price-log").open) renderPrices(); }
+  if (t === "more"){ showBackupNote(); syncStatus(); paintTechSettings(); if ($("price-log").open) renderPrices(); }
 }
 for (const v of VIEWS) $("tab-" + v).onclick = () => showTab(v);
 
 showWho(); showBackupNote(); paintQuote(); renderLeads(); renderSched(); syncStatus();
 showTab(DEFAULT_TAB);
 if (team()){ queueLeadChanges(leads()); syncNow(); }
+</script>
+<script>
+"use strict";
+// ---------- tech mode: the tech's phone ----------
+// Opening #tech=<base64 {u: script address, t: tech token, n: name}> stores it and puts this phone in tech mode for good,
+// until the owner turns that link off. The phone then shows only the tech's own jobs (no tabs, no map, no customers,
+// no prices, no settings). It talks to the sheet's script with the tech token alone; the team code is never in the link.
+// This block is its own <script> so it still runs if a library for the owner's screens didn't load.
+(function(){
+  const store2 = {
+    get(k, d){ try{ const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; }catch(e){ return d; } },
+    set(k, v){ try{ localStorage.setItem(k, JSON.stringify(v)); }catch(e){} },
+    del(k){ try{ localStorage.removeItem(k); }catch(e){} }
+  };
+  const KT = {tech:"ss-tech", jobs:"ss-techjobs", q:"ss-techq", off:"ss-techoff"}, root = document.documentElement, box = document.getElementById("tech-app");
+  const okUrl = u => /^https:\/\/script\.google\.com\/macros\/s\/[\w-]+\/exec$/.test(u)
+    || (/^(localhost|127\.0\.0\.1)$/.test(location.hostname) && /^http:\/\/127\.0\.0\.1:\d+\/$/.test(u));
+  function fromLink(){
+    const m = location.hash.match(/tech=([A-Za-z0-9_-]+)/); if (!m) return;
+    const ownerPhone = !!store2.get("ss-team", null);   // the owner's own phone never turns into a tech phone by accident
+    try{
+      const j = JSON.parse(new TextDecoder().decode(Uint8Array.from(atob(m[1].replace(/-/g, "+").replace(/_/g, "/")), c => c.charCodeAt(0))));
+      if (!ownerPhone && j.u && j.t && okUrl(j.u)){
+        store2.set(KT.tech, {u:j.u, t:j.t, n:String(j.n || "")}); store2.del(KT.off); store2.del(KT.jobs); store2.del(KT.q);
+      }
+    }catch(e){}
+    history.replaceState(null, "", location.pathname + location.search);
+  }
+  fromLink();
+  const T = () => store2.get(KT.tech, null);
+  if (!T()){ root.classList.remove("tech-mode"); return; }
+  root.classList.add("tech-mode");
+  window.__techMode = true;
+
+  const ymdL = d => d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
+  const addD = (s, n) => { const [y, m, d] = s.split("-").map(Number), x = new Date(y, m - 1, d + n); return ymdL(x); };
+  const mon = () => { const d = new Date(); d.setDate(d.getDate() - ((d.getDay() + 6) % 7)); return ymdL(d); };
+  const usd = n => { n = Number(n) || 0; return "$" + (Math.abs(n % 1) > 0.004 ? n.toFixed(2) : String(Math.round(n))); };
+  const mk = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; };
+  const mapUrl = j => {
+    const dest = j.lat != null && j.lon != null ? j.lat + "," + j.lon : (j.address || "");
+    const ios = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+    return ios ? "https://maps.apple.com/?dirflg=d&daddr=" + encodeURIComponent(dest) : "https://www.google.com/maps/dir/?api=1&destination=" + encodeURIComponent(dest);
+  };
+  const cache = () => store2.get(KT.jobs, {at:0, jobs:[], owner:"", tech:""});
+  const pending = () => store2.get(KT.q, []);
+
+  function jobCardEl(j){
+    const c = mk("div", "tjob" + (j.done ? " done" : "")); c.dataset.tjob = j.id;
+    c.append(mk("div", "twin", j.winText || "Any time"));
+    const a = mk("a", "taddr", j.address || "No address"); a.href = mapUrl(j); a.target = "_blank"; a.rel = "noopener"; c.append(a);
+    if (j.what) c.append(mk("div", "twhat", j.what + (j.details ? " · " + j.details : "")));
+    if (j.notes) c.append(mk("div", "twhat", "Notes: " + j.notes));
+    const owner = cache().owner || "the office";
+    c.append(mk("div", "tpay", j.pay != null ? "Your pay: " + usd(j.pay) : "Pay: ask " + owner));
+    if (Number(j.tip) > 0) c.append(mk("div", "ttip", "Tip: " + usd(j.tip)));
+    if (!j.done){ const b = mk("button", "tdone", "Done"); b.type = "button"; b.onclick = () => markDone(j.id); c.append(b); }
+    return c;
+  }
+  function render(){
+    const t = T(); if (!t) return;
+    box.textContent = "";
+    if (store2.get(KT.off, false)){ box.append(mk("h1", "", "Hi" + (t.n ? " " + t.n : "")), mk("div", "toff", "This link was turned off. Ask for a new one.")); return; }
+    const cs = cache(), name = cs.tech || t.n, pend = new Set(pending().map(x => x.id));
+    const jobs = (cs.jobs || []).map(j => pend.has(j.id) ? Object.assign({}, j, {done:true}) : j);
+    const today = ymdL(new Date()), tomorrow = addD(today, 1), m0 = mon(), m1 = addD(m0, 6);
+    const week = jobs.filter(j => j.date >= m0 && j.date <= m1).reduce((a, j) => a + (Number(j.pay) || 0) + (Number(j.tip) || 0), 0);
+    box.append(mk("h1", "", "Hi" + (name ? " " + name : "")));
+    const w = mk("div", "tw", "This week: " + usd(week)); w.id = "tech-week"; box.append(w);
+    const upd = mk("div", "muted", cs.at ? "Last updated " + new Date(cs.at).toLocaleTimeString("en-US", {hour:"numeric", minute:"2-digit"}) + (pend.size ? " · " + pend.size + " Done waiting to send" : "") : "Loading…"); upd.id = "tech-upd"; box.append(upd);
+    const groups = [["Today", j => !j.done && j.date <= today], ["Tomorrow", j => !j.done && j.date === tomorrow], ["Later", j => !j.done && j.date > tomorrow], ["Done", j => j.done]];
+    let any = false;
+    for (const [title, keep] of groups){
+      const list = jobs.filter(keep); if (!list.length) continue; any = true;
+      const h = mk("h2", "", title); box.append(h);
+      for (const j of list) box.append(jobCardEl(j));
+    }
+    if (!any && cs.at) box.append(mk("p", "twhat", "No jobs right now."));
+  }
+  let busy = false;
+  async function call(body){
+    const t = T(), ctl = new AbortController(), timer = setTimeout(() => ctl.abort(), 30000);
+    try{ const r = await fetch(t.u, {method:"POST", body: JSON.stringify(Object.assign({tech: t.t}, body)), signal: ctl.signal}); return await r.json(); }
+    finally{ clearTimeout(timer); }
+  }
+  async function refresh(){
+    if (busy || !T()) return; busy = true;
+    try{
+      // taps made offline go first
+      for (const p of pending().slice()){
+        const j = await call({act:"done", id:p.id, op:p.op});
+        if (j.ok || j.error === "not your job") store2.set(KT.q, pending().filter(x => x.op !== p.op));
+        else if (j.error === "link off"){ store2.set(KT.off, true); break; }
+        else break;
+      }
+      if (!store2.get(KT.off, false)){
+        const j = await call({act:"jobs"});
+        if (j.ok) store2.set(KT.jobs, {at: Date.now(), jobs: j.jobs || [], owner: j.owner || "", tech: j.tech || ""});
+        else if (j.error === "link off") store2.set(KT.off, true);
+      }
+    }catch(e){ /* no signal: keep showing the last saved copy */ }
+    busy = false; render();
+  }
+  function markDone(id){
+    const q = pending(); if (q.some(x => x.id === id)) return;
+    q.push({id, op: "t" + Date.now().toString(36) + Math.random().toString(36).slice(2, 8)}); store2.set(KT.q, q);
+    render(); refresh();
+  }
+  window.techRefresh = refresh; window.techRender = render;
+  render(); refresh();
+  document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible") refresh(); });
+  addEventListener("pageshow", refresh); addEventListener("online", refresh);
+  setInterval(() => { if (document.visibilityState === "visible") refresh(); }, 60000);
+  addEventListener("hashchange", () => { if (/tech=/.test(location.hash)){ fromLink(); render(); refresh(); } });
+})();
 </script>
 </body>
 </html>
