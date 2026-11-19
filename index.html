@@ -243,6 +243,9 @@ html.tech-mode #tech-app{display:block}
 .tjob .ttip{font:700 20px var(--body);color:var(--ok)}
 .tjob .tdone{min-height:60px;font:700 22px var(--body);border-radius:14px;border:0;background:var(--ok);color:#fff;width:100%}
 .tjob .tnote{font:500 15px/1.3 var(--body);opacity:.75}
+.tjob .tstep{min-height:60px;font:700 22px var(--body);border-radius:14px;border:0;background:var(--accent);color:var(--accent-ink);width:100%}
+.tjob .tdone.later{min-height:44px;font:600 16px var(--body);background:none;color:var(--ink);border:1.5px solid var(--line)}
+.tjob .tline{font:600 15px/1.3 var(--body);color:var(--ok)}
 #tech-app .ttodo{font:500 15px/1.3 var(--body);opacity:.75;margin:0 0 4px}
 .toff{border:2px solid var(--warn);background:var(--warn-soft);border-radius:14px;padding:18px;font:700 20px/1.3 var(--body)}
 .paybox{display:grid;gap:8px;border:1px solid var(--line);border-radius:12px;padding:10px 12px;background:var(--bg)}
@@ -1428,6 +1431,10 @@ function jobCard(l){
   c.append(who, el("div", "big", l.address || "No address"), el("div", "", [svcText(l.quote), money(leadPrice(l))].filter(Boolean).join(" · ")));
   c.append(el("div", "muted", [l.name || "No name", detailText(l.quote), l.job.who ? "Assigned to " + l.job.who : ""].filter(Boolean).join(" · ")));
   if (l.quote && l.quote.notes) c.append(el("div", "muted", "Notes: " + l.quote.notes));
+  if (l.omwAt || l.startAt){   // the tech's taps on the way to Done
+    const hm = t => new Date(t).toLocaleTimeString("en-US", {hour:"numeric", minute:"2-digit"});
+    c.append(el("div", "muted steps", [l.omwAt ? "On the way " + hm(l.omwAt) : "", l.startAt ? "Started " + hm(l.startAt) : ""].filter(Boolean).join(" · ")));
+  }
   if (done && (l.doneBy || l.donePhoto || l.doneLoc)){   // proof from the tech's Done tap
     const pr = el("div", "muted proof", "Marked done" + (l.doneBy ? " by " + l.doneBy : "") + (l.doneAt ? " at " + new Date(l.doneTap || l.doneAt).toLocaleTimeString("en-US", {hour:"numeric", minute:"2-digit"}) : "")
       + (l.doneFt != null ? " · " + (l.doneFt < 1000 ? l.doneFt + " ft from the house" : (l.doneFt / 5280).toFixed(1) + " miles from the house") : l.doneLoc ? " · place saved" : " · no place (" + (l.doneLocErr || "not sent") + ")")
@@ -2176,7 +2183,7 @@ $("who").addEventListener("change", () => {
 // When the app comes back to the front and every 30 min. It refreshes by itself only when nothing is open;
 // otherwise a "New version ready" pill. Taps are saved first, so nothing is lost.
 // APP_VERSION is restamped (yyyymmddHHMMSS) each time the page is published; "dev" turns the check off.
-const APP_VERSION = "20261119110955";
+const APP_VERSION = "20261119112746";
 $("app-ver").textContent = APP_VERSION.replace(/^(\d{4})(\d\d)(\d\d)(\d\d)(\d\d).*/, "$1-$2-$3 $4:$5");
 function idleForReload(){
   for (const id of ["dsheet", "cbsheet", "tsheet", "ssheet", "jsheet", "psheet", "pjsheet", "msheet", "paysheet"]) if (!$(id).hidden) return false;
@@ -2236,7 +2243,7 @@ if (team()){ queueLeadChanges(leads()); syncNow(); }
     set(k, v){ try{ localStorage.setItem(k, JSON.stringify(v)); }catch(e){} },
     del(k){ try{ localStorage.removeItem(k); }catch(e){} }
   };
-  const KT = {tech:"ss-tech", jobs:"ss-techjobs", q:"ss-techq", off:"ss-techoff"}, root = document.documentElement, box = document.getElementById("tech-app");
+  const KT = {tech:"ss-tech", jobs:"ss-techjobs", q:"ss-techq", off:"ss-techoff", steps:"ss-techsteps"}, root = document.documentElement, box = document.getElementById("tech-app");
   const okUrl = u => /^https:\/\/script\.google\.com\/macros\/s\/[\w-]+\/exec$/.test(u)
     || (/^(localhost|127\.0\.0\.1)$/.test(location.hostname) && /^http:\/\/127\.0\.0\.1:\d+\/$/.test(u));
   function fromLink(){
@@ -2278,9 +2285,14 @@ if (team()){ queueLeadChanges(leads()); syncNow(); }
     const owner = cache().owner || "the office";
     c.append(mk("div", "tpay", j.pay != null ? "Your pay: " + usd(j.pay) : "Pay: ask " + owner));
     if (Number(j.tip) > 0) c.append(mk("div", "ttip", "Tip: " + usd(j.tip)));
+    const hm = t => new Date(t).toLocaleTimeString("en-US", {hour:"numeric", minute:"2-digit"});
+    const tl = [j.omw ? "On my way " + hm(j.omw) : "", j.started ? "Started " + hm(j.started) : ""].filter(Boolean).join(" · ");
+    if (tl) c.append(mk("div", "tline", tl));
     if (!j.done){
       c.append(mk("div", "tnote", "Counts toward your week once it's marked Done."));
-      const b = mk("button", "tdone", "Done: take the after photo"); b.type = "button"; b.onclick = () => markDone(j.id); c.append(b);
+      const next = !j.omw && !j.started ? ["omw", "On my way"] : !j.started ? ["start", "Started"] : null;
+      if (next){ const sb = mk("button", "tstep", next[1]); sb.type = "button"; sb.dataset.step = next[0]; sb.onclick = () => markStep(j.id, next[0]); c.append(sb); }
+      const b = mk("button", "tdone" + (next ? " later" : ""), "Done: take the after photo"); b.type = "button"; b.onclick = () => markDone(j.id); c.append(b);
     }
     return c;
   }
@@ -2289,7 +2301,10 @@ if (team()){ queueLeadChanges(leads()); syncNow(); }
     box.textContent = "";
     if (store2.get(KT.off, false)){ box.append(mk("h1", "", "Hi" + (t.n ? " " + t.n : "")), mk("div", "toff", "This link was turned off. Ask for a new one.")); return; }
     const cs = cache(), name = cs.tech || t.n, pend = new Set(pending().map(x => x.id));
-    const jobs = (cs.jobs || []).map(j => pend.has(j.id) ? Object.assign({}, j, {done:true}) : j);
+    const stepsQ = store2.get(KT.steps, []);   // taps not sent yet still show on the card
+    const jobs = (cs.jobs || []).map(j => { const o = Object.assign({}, j); if (pend.has(j.id)) o.done = true;
+      for (const p of stepsQ) if (p.id === j.id){ if (p.step === "omw" && !o.omw) o.omw = p.at; if (p.step === "start"){ if (!o.started) o.started = p.at; if (!o.omw) o.omw = p.at; } }
+      return o; });
     const today = ymdL(new Date()), tomorrow = addD(today, 1), m0 = mon(), m1 = addD(m0, 6);
     // pay counts only for jobs marked Done; the rest of the week shows as still to do
     const sum = l => l.reduce((a, j) => a + (Number(j.pay) || 0) + (Number(j.tip) || 0), 0), wk = jobs.filter(j => j.date >= m0 && j.date <= m1);
@@ -2316,7 +2331,13 @@ if (team()){ queueLeadChanges(leads()); syncNow(); }
   async function refresh(){
     if (busy || !T()) return; busy = true;
     try{
-      // taps made offline go first
+      // taps made offline go first: "On my way" and "Started", in the order he tapped them
+      for (const p of store2.get(KT.steps, []).slice()){
+        const j = await call({act:"step", id:p.id, step:p.step, op:p.op, at:p.at});
+        if (j.ok || j.error === "not your job" || j.error === "bad request") store2.set(KT.steps, store2.get(KT.steps, []).filter(x => x.op !== p.op));
+        else if (j.error === "link off"){ store2.set(KT.off, true); break; }
+        else break;
+      }
       for (const p of pending().slice()){
         const j = await call({act:"done", id:p.id, op:p.op, at:p.at, photo:p.photo, loc:p.loc});
         if (j.ok || j.error === "not your job") store2.set(KT.q, pending().filter(x => x.op !== p.op));
@@ -2363,6 +2384,11 @@ if (team()){ queueLeadChanges(leads()); syncNow(); }
         e => { clearTimeout(t); res({err: e && e.code === 1 ? "location not allowed" : "location not found"}); },
         {enableHighAccuracy: true, timeout: 8000, maximumAge: 60000});
     });
+  }
+  function markStep(id, step){
+    const q = store2.get(KT.steps, []); if (q.some(x => x.id === id && x.step === step)) return;
+    q.push({id, step, at: Date.now(), op: "s" + Date.now().toString(36) + Math.random().toString(36).slice(2, 8)}); store2.set(KT.steps, q);
+    render(); refresh();
   }
   const marking = new Set();
   async function markDone(id){
