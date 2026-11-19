@@ -1172,7 +1172,10 @@ function leadCard(l){
   const d = nextDue(l), c = el("div", "lead solo"), who = el("div", "who");
   c.dataset.lead = l.id;
   c.append(el("div", "big", l.name || l.address || "No name"));
-  who.append(el("span", "", money(leadPrice(l))), pillsFor(l)); c.append(who);
+  const webAsk = !!l.web && !leadPrice(l);   // came in from the website form: no price yet
+  who.append(el("span", "", webAsk ? "Website request" : money(leadPrice(l))), pillsFor(l)); c.append(who);
+  if (webAsk) c.append(el("div", "payline", "Asked on the website. Give them a price." + (l.consent ? "" : " They did not tick OK to text, so call.")));
+  if (l.web && l.quote && l.quote.notes) c.append(el("div", "muted", "They wrote: " + l.quote.notes));
   c.append(el("div", "muted", [l.name ? l.address : "", l.phone, new Date(l.created).toLocaleDateString("en-US", {month:"short", day:"numeric"}), team() && l.seller ? "by " + l.seller : ""].filter(Boolean).join(" · ")));
   const q = l.quote || {}, os = q.options || [];
   c.append(el("div", "muted", [svcText(q), os.length > 1 ? os.map(o => money(o.price)).join(" / ") : "", q.repeat && q.repeatPrice ? `repeat ${REPEAT_WORDS[q.repeat]} ${money(q.repeatPrice)}` : ""].filter(Boolean).join(" · ")));
@@ -1221,7 +1224,7 @@ function renderCust(){
     const b = el("button", "item"); b.type = "button"; b.dataset.cust = l.id;
     const g = el("div", "grow"), end = el("div", "end");
     g.append(el("b", "", l.name || l.address || "No name"), el("span", "", [l.name ? l.address : "", team() && l.seller ? "by " + l.seller : ""].filter(Boolean).join(" · ") || " "));
-    end.append(el("span", "", money(leadPrice(l))), statusPill(l)); const pp = payPill(l); if (pp) end.append(pp);
+    end.append(el("span", "", l.web && !leadPrice(l) ? "Website" : money(leadPrice(l))), statusPill(l)); const pp = payPill(l); if (pp) end.append(pp);
     if (isDue(l)) end.append(el("span", "pill due", "Text today"));
     b.append(g, end); b.onclick = () => openCard(l.id); box.append(b);
   }
@@ -1275,6 +1278,8 @@ function renderHome(){
   const quoted = all.filter(l => l.status === "quoted").length, won = all.filter(l => l.status === "won").length, unpaid = all.filter(l => l.status === "done" && payState(l) !== "paid").length;
   const plural = (n, w) => n + " " + w + (n === 1 ? "" : "s");
   if (cbDue) ab.append(attnRow("comeback", plural(cbDue, "come-back") + " due", "Doors to try again", () => { showTab("doors"); openSheet("cbsheet"); }));
+  const webNew = all.filter(l => l.web && l.status === "quoted" && !leadPrice(l)).length;
+  if (webNew) ab.append(attnRow("web", plural(webNew, "website request"), "Give them a price", () => { custFilter = "quoted"; $("cust-q").value = ""; showTab("cust"); }));
   if (quoted) ab.append(attnRow("quotes", plural(quoted, "quote") + " waiting", all.filter(isDue).length ? all.filter(isDue).length + " to text today" : "Not answered yet", () => { custFilter = "quoted"; $("cust-q").value = ""; showTab("cust"); }));
   if (won) ab.append(attnRow("unsched", (won === 1 ? "1 won job needs" : won + " won jobs need") + " a day", "Pick a day on the Schedule", () => showTab("sched")));
   if (unpaid) ab.append(attnRow("unpaid", plural(unpaid, "unpaid job"), "Done, waiting on payment", () => { custFilter = "unpaid"; $("cust-q").value = ""; showTab("cust"); }));
@@ -2171,7 +2176,7 @@ $("who").addEventListener("change", () => {
 // When the app comes back to the front and every 30 min. It refreshes by itself only when nothing is open;
 // otherwise a "New version ready" pill. Taps are saved first, so nothing is lost.
 // APP_VERSION is restamped (yyyymmddHHMMSS) each time the page is published; "dev" turns the check off.
-const APP_VERSION = "20261119101532";
+const APP_VERSION = "20261119110955";
 $("app-ver").textContent = APP_VERSION.replace(/^(\d{4})(\d\d)(\d\d)(\d\d)(\d\d).*/, "$1-$2-$3 $4:$5");
 function idleForReload(){
   for (const id of ["dsheet", "cbsheet", "tsheet", "ssheet", "jsheet", "psheet", "pjsheet", "msheet", "paysheet"]) if (!$(id).hidden) return false;
